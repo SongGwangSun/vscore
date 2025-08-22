@@ -1,0 +1,478 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.screen {
+    display: none;
+    width: 100%;
+    height: 100vh;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* 게임 선택 화면 */
+#gameSelection h1 {
+    color: white;
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.game-buttons {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.game-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 20px;
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    min-width: 150px;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.game-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.3);
+}
+
+.game-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.game-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+/* 게임 설정 화면 */
+#gameSettings {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 3rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    max-width: 500px;
+    width: 90%;
+}
+
+#selectedGameTitle {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #333;
+    font-size: 2rem;
+}
+
+.settings-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.setting-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.setting-group label {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.radio-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.radio-group input[type="radio"] {
+    display: none;
+}
+
+.radio-group label {
+    background: #f0f0f0;
+    padding: 0.8rem 1.5rem;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.radio-group input[type="radio"]:checked + label {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.start-btn {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* 점수판 화면 */
+#scoreboard {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    width: 100%;
+    max-width: 1000px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.sets-display {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-radius: 15px;
+    color: white;
+}
+
+.set-scores {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.separator {
+    margin: 0 1rem;
+    opacity: 0.8;
+}
+
+.current-set {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.scoreboard-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.player-score {
+    flex: 1;
+    text-align: center;
+    padding: 2rem;
+    background: #f8f9fa;
+    border-radius: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.player-score:active {
+    transform: scale(0.98);
+    background: #e9ecef;
+}
+
+.player-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.score-display {
+    font-size: 6rem;
+    font-weight: bold;
+    color: #667eea;
+    margin: 1rem 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.touch-hint {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 1rem;
+}
+
+.vs-divider {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+    padding: 1rem;
+}
+
+.control-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.control-btn:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+/* 게임 종료 화면 */
+#gameEnd {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 3rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+}
+
+#gameEnd h2 {
+    color: #333;
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+.winner-display {
+    margin: 2rem 0;
+}
+
+.winner-text {
+    font-size: 1.5rem;
+    color: #667eea;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.final-score {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.end-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.end-btn {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
+}
+
+.end-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .game-buttons {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .game-btn {
+        min-width: 120px;
+        min-height: 120px;
+        padding: 1.5rem;
+    }
+    
+    .game-icon {
+        font-size: 3rem;
+    }
+    
+    .game-name {
+        font-size: 1.2rem;
+    }
+    
+    #scoreboard {
+        padding: 1rem;
+        border-radius: 0;
+    }
+    
+    .scoreboard-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .player-score {
+        width: 100%;
+        padding: 1.5rem;
+    }
+    
+    .score-display {
+        font-size: 4rem;
+    }
+    
+    .vs-divider {
+        font-size: 1.5rem;
+        padding: 0.5rem;
+    }
+    
+    .control-buttons {
+        flex-direction: column;
+    }
+    
+    .control-btn {
+        width: 100%;
+    }
+    
+    .sets-display {
+        margin-bottom: 1rem;
+    }
+    
+    .set-scores {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .screen {
+        padding: 10px;
+    }
+    
+    #gameSelection h1 {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .game-btn {
+        min-width: 100px;
+        min-height: 100px;
+        padding: 1rem;
+    }
+    
+    .game-icon {
+        font-size: 2.5rem;
+    }
+    
+    .game-name {
+        font-size: 1rem;
+    }
+    
+    #gameSettings {
+        padding: 2rem 1rem;
+    }
+    
+    .score-display {
+        font-size: 3rem;
+    }
+    
+    .player-name {
+        font-size: 1.2rem;
+    }
+    
+    .touch-hint {
+        font-size: 0.8rem;
+    }
+}
+
+/* 세로 모드에서의 최적화 */
+@media (orientation: portrait) and (max-height: 600px) {
+    .scoreboard-container {
+        margin: 1rem 0;
+    }
+    
+    .score-display {
+        font-size: 3rem;
+    }
+    
+    .sets-display {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* 가로 모드에서의 최적화 */
+@media (orientation: landscape) and (max-height: 500px) {
+    #scoreboard {
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    .sets-display {
+        margin-bottom: 0;
+        margin-right: 2rem;
+    }
+    
+    .scoreboard-container {
+        margin: 0 2rem;
+    }
+    
+    .control-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
