@@ -87,10 +87,10 @@ function increaseScore(player) {
     // 점수 증가
     if (player === 1) {
         gameState.player1Score++;
-        speakScore(`${gameState.player1Score}`);
+        speakScore(`${gameState.player1Score} 대 ${gameState.player2Score}`);
     } else {
         gameState.player2Score++;
-        speakScore(`${gameState.player2Score}`);
+        speakScore(`${gameState.player1Score} 대 ${gameState.player2Score}`);
     }
     
     updateScoreboard();
@@ -101,10 +101,10 @@ function increaseScore(player) {
 function decreaseScore(player) {
     if (player === 1 && gameState.player1Score > 0) {
         gameState.player1Score--;
-        speakScore(`${gameState.player1Score}`);
+        speakScore(`${gameState.player1Score} 대 ${gameState.player2Score}`);
     } else if (player === 2 && gameState.player2Score > 0) {
         gameState.player2Score--;
-        speakScore(`${gameState.player2Score}`);
+        speakScore(`${gameState.player1Score} 대 ${gameState.player2Score}`);
     }
     
     updateScoreboard();
@@ -146,7 +146,7 @@ function endSet(winner) {
             gameState.player1Score = 0;
             gameState.player2Score = 0;
             updateScoreboard();
-            speakScore(`${gameState.currentSet}세트 시작!`);
+            speakScore(`${gameState.currentSet}세트 시작! 0 대 0`);
         }, 2000);
     }
 }
@@ -172,7 +172,7 @@ function resetSet() {
     gameState.player1Score = 0;
     gameState.player2Score = 0;
     updateScoreboard();
-    speakScore('세트 리셋');
+    speakScore(' 0 대 0, 세트 리셋');
 }
 
 // 마지막 점수 취소
@@ -337,3 +337,4 @@ if ('caches' in window) {
         ]);
     });
 }
+
