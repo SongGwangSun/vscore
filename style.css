@@ -990,7 +990,7 @@ body.android .end-btn {
 		border: 1px solid #e9ecef;
 		border-radius: 12px;
 		display: flex;
-		flex-direction: row;
+		flex-direction: column;
 		gap: 0.5rem;
 		align-items: center;
 		justify-content: flex-end;
@@ -1092,3 +1092,4 @@ body.android .end-btn {
 		padding: 0;
 	}
 }
+
