@@ -556,7 +556,6 @@ body.mobile {
     }
     
     .control-buttons {
-        transform: rotate(90deg); /* 90도 수직 회전 */
         gap: 0.5rem;
         padding: 0.5rem;
     }
@@ -1092,4 +1091,5 @@ body.android .end-btn {
 		padding: 0;
 	}
 }
+
 
