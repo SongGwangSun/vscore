@@ -900,3 +900,28 @@ body.android .end-btn {
         text-shadow: 2px 2px 0 #000;
     }
 }
+
+/* 점수판 숫자 크기 - 가로 모드에서 축소하여 절반 이상 과대 차지 방지 */
+@media (orientation: landscape) {
+    .score-display {
+        font-size: clamp(4rem, 15vw, 12rem);
+    }
+    .player-score { padding: 0.75rem; }
+}
+
+/* 설정/선택/종료 화면은 고정 100vh 대신 auto + 스크롤 허용 (상단 잘림 방지) */
+#gameSettings.screen,
+#gameSelection.screen,
+#gameEnd.screen {
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
+}
+
+/* 가로모드에서 설정 화면 상단 여백과 안전영역 반영 */
+@media (orientation: landscape) {
+    #gameSettings {
+        padding-top: max(1.25rem, env(safe-area-inset-top));
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+}
