@@ -292,6 +292,7 @@ body.mobile {
     flex-shrink: 0;
 }
 
+/* 점수 숫자 고정폭과 최소 폭 예약으로 자릿수 증가 시 레이아웃 고정 */
 .score-display {
     font-size: clamp(6rem, 25vw, 20rem);
     font-weight: bold;
@@ -305,8 +306,10 @@ body.mobile {
     justify-content: center;
     width: 100%;
     white-space: nowrap;
-    font-variant-numeric: tabular-nums; /* 고정폭 숫자 */
-    font-feature-settings: 'tnum' 1, 'lnum' 1; /* 일부 브라우저용 */
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
+    min-width: 3ch; /* 두 자리 이상을 위해 최소 폭 예약 */
+    box-sizing: border-box;
 }
 
 .touch-hint {
@@ -628,6 +631,23 @@ body.mobile {
         padding: 0.5rem;
         font-size: 0.8rem;
         height: 45px;
+    }
+
+    /* 가운데 VS는 숨겨 두 영역을 정확히 절반으로 */
+    .vs-divider { display: none; }
+
+    /* 설정 화면이 잘리지 않도록 스크롤 허용 및 여백 보정 */
+    #gameSettings { 
+        overflow: auto; 
+        padding-top: max(1rem, env(safe-area-inset-top));
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+
+    /* 선택/종료 화면들도 스크롤 가능하도록 */
+    #gameSelection, #gameEnd { 
+        overflow: auto; 
+        padding-top: max(1rem, env(safe-area-inset-top));
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
     }
 }
 
