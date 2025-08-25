@@ -261,7 +261,7 @@ body.mobile {
     background: #f8f9fa;
     border-radius: 20px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
@@ -274,10 +274,12 @@ body.mobile {
     min-height: 0;
     width: 50%;
     height: 100%;
+    min-width: 0;
 }
 
 .player-score:active {
-    transform: scale(0.98);
+    /* 레이아웃 흔들림 방지를 위해 축소 효과 제거 */
+    transform: none;
     background: #e9ecef;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
@@ -301,6 +303,10 @@ body.mobile {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums; /* 고정폭 숫자 */
+    font-feature-settings: 'tnum' 1, 'lnum' 1; /* 일부 브라우저용 */
 }
 
 .touch-hint {
