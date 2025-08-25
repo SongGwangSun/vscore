@@ -953,3 +953,85 @@ body.android .end-btn {
     }
     #selectedGameTitle { margin-top: 0; }
 }
+
+/* 가로모드 전용 레이아웃: 상단(세트점수+아이콘), 하단(좌/우 점수 절반) */
+@media (orientation: landscape) {
+	#scoreboard {
+		display: grid;
+		grid-template-rows: auto 1fr;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.5rem;
+		height: 100vh;
+		padding: 0.5rem;
+	}
+
+	/* 상단: 좌측 세트 점수, 우측 아이콘 바 */
+	.sets-display {
+		grid-row: 1;
+		grid-column: 1;
+		height: auto;
+		padding: 0.5rem 0.75rem;
+		border-radius: 12px;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: flex-start;
+	}
+
+	.control-buttons {
+		grid-row: 1;
+		grid-column: 2;
+		position: static;
+		height: auto;
+		padding: 0.5rem 0.75rem;
+		background: rgba(255,255,255,0.95);
+		border-top: none;
+		border-radius: 12px;
+		display: flex;
+		flex-direction: row;
+		gap: 0.5rem;
+		align-items: center;
+		justify-content: flex-end;
+		flex-wrap: nowrap;
+		z-index: 1;
+	}
+
+	.control-btn {
+		flex: 0 0 auto;
+		width: 56px;
+		height: 56px;
+		min-width: 56px;
+		border-radius: 50%;
+		font-size: 1.4rem;
+		padding: 0;
+	}
+
+	/* 하단: 점수 영역이 남은 공간 전체를 차지, 좌/우 절반 */
+	.scoreboard-container {
+		grid-row: 2;
+		grid-column: 1 / span 2;
+		display: flex;
+		flex-direction: row;
+		align-items: stretch;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: 0.25rem;
+		height: auto;
+		min-height: 0;
+	}
+
+	.player-score {
+		flex: 1 1 0;
+		min-width: 0;
+		height: 100%;
+		padding: 0.75rem;
+	}
+
+	/* 숫자 크기 가로모드 튜닝: 절반 이상 과대 방지 */
+	.score-display {
+		font-size: clamp(4.5rem, 14vw, 12rem);
+	}
+
+	/* VS는 필요 시 유지하되 너무 커지지 않도록 */
+	.vs-divider { font-size: clamp(1rem, 2vw, 1.2rem); padding: 0.25rem; }
+}
