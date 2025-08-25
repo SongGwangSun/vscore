@@ -909,7 +909,33 @@ body.android .end-btn {
     .player-score { padding: 0.75rem; }
 }
 
-/* 설정/선택/종료 화면은 고정 100vh 대신 auto + 스크롤 허용 (상단 잘림 방지) */
+/* 가로모드: 하단 아이콘 바를 항상 화면에 고정하고 겹침 방지 패딩 적용 */
+@media (orientation: landscape) {
+    /* 하단 고정 바 */
+    .control-buttons {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 12vh;
+        padding: 0.5rem 0.75rem;
+        background: rgba(255, 255, 255, 0.96);
+        border-top: 1px solid #e9ecef;
+        z-index: 1000;
+        display: flex;
+        flex-direction: row;
+        gap: 0.5rem;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: nowrap;
+    }
+    /* 점수판 본문이 하단바에 가리지 않도록 여백 */
+    #scoreboard {
+        padding-bottom: 12vh;
+    }
+}
+
+/* 설정/선택/종료 화면: 가로모드 상단 잘림 방지 (스크롤+상단 여백) */
 #gameSettings.screen,
 #gameSelection.screen,
 #gameEnd.screen {
@@ -918,10 +944,12 @@ body.android .end-btn {
     overflow: auto;
 }
 
-/* 가로모드에서 설정 화면 상단 여백과 안전영역 반영 */
 @media (orientation: landscape) {
-    #gameSettings {
-        padding-top: max(1.25rem, env(safe-area-inset-top));
-        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    #gameSettings,
+    #gameSelection,
+    #gameEnd {
+        padding-top: calc(env(safe-area-inset-top) + 2.25rem);
+        padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
     }
+    #selectedGameTitle { margin-top: 0; }
 }
