@@ -213,6 +213,34 @@ body.mobile {
     justify-content: space-between;
 }
 
+/* ...existing code... */
+.serve-change-alert {
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffeb3b;
+    color: #333;
+    font-size: 2rem;
+    font-weight: bold;
+    padding: 1rem 2rem;
+    border-radius: 30px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    z-index: 9999;
+    animation: fadeInOut 1.5s;
+}
+.score-display.serve {
+    color: #e53935 !important;
+    text-shadow: 2px 2px 8px rgba(229,57,53,0.2);
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { opacity: 0; }
+}
+/* ...existing code... */
 .sets-display {
     text-align: center;
     padding: 1rem;
@@ -590,6 +618,7 @@ body.mobile {
     }
     
     .control-buttons {
+        flex-direction: row;
         height: 12vh;
         padding: 0.5rem;
     }
@@ -775,7 +804,7 @@ body.android .end-btn {
     .control-btn,
     .start-btn,
     .end-btn {
-        border-radius: 25px;
+        border-radius: 20px;
     }
 }
 
@@ -1036,60 +1065,3 @@ body.android .end-btn {
 	/* VS는 가로모드에서 숨김 */
 	.vs-divider { display: none; }
 }
-
-/* 가로모드: 우측 아이콘 3개 세로 배치 (점수 영역과 분리) */
-@media (orientation: landscape) {
-	/* 우측 컬럼 전체를 아이콘 세로 스택으로 사용 */
-	.control-buttons {
-		grid-row: 1 / span 2;   /* 상단+하단 전체 차지 */
-		grid-column: 2;         /* 우측 컬럼 */
-		position: static;
-		height: 100%;
-		width: auto;
-		padding: 0.75rem;
-		background: rgba(255,255,255,0.95);
-		border: 1px solid #e9ecef;
-		border-radius: 12px;
-		display: flex;
-		flex-direction: column; /* 세로 배치 */
-		gap: 0.75rem;
-		align-items: center;
-		justify-content: center;
-		flex-wrap: nowrap;
-		z-index: 1;
-		transform: none; /* 회전 제거 */
-	}
-
-	/* 점수 영역은 하단 좌측 컬럼만 사용 */
-	.scoreboard-container {
-		grid-row: 2;     /* 하단 */
-		grid-column: 1;  /* 좌측 컬럼만 */
-		display: flex;
-		flex-direction: row;
-		align-items: stretch;
-		justify-content: space-between;
-		gap: 0.5rem;
-		padding: 0.25rem;
-		height: auto;
-		min-height: 0;
-	}
-
-	/* 상단 좌측: 세트 점수 (유지) */
-	.sets-display {
-		grid-row: 1;
-		grid-column: 1;
-	}
-
-	/* 아이콘 버튼 크기 통일 */
-	.control-btn {
-		flex: 0 0 auto;
-		width: 56px;
-		height: 56px;
-		min-width: 56px;
-		border-radius: 50%;
-		font-size: 1.4rem;
-		padding: 0;
-	}
-}
-
-
