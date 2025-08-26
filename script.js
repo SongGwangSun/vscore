@@ -1,538 +1,1068 @@
-// 게임 상태 관리
-let gameState = {
-    selectedGame: '',
-    winScore: 11,
-    totalSets: 3,
-    currentSet: 1,
-    player1Score: 0,
-    player2Score: 0,
-    player1Sets: 0,
-    player2Sets: 0,
-    scoreHistory: [],
-    lastTapTime: 0,
-    doubleTapDelay: 300,
-    touchStartTime: 0,
-    touchEndTime: 0
-};
-
-// 음성 합성 초기화
-let speechSynthesis = window.speechSynthesis;
-let speechUtterance = null;
-
-// 게임 선택
-function selectGame(game) {
-    console.log('selectGame called with:', game);
-    gameState.selectedGame = game;
-    const gameNames = {
-        'pingpong': '탁구',
-        'badminton': '배드민턴'
-    };
-    document.getElementById('selectedGameTitle').textContent = `${gameNames[game]} 게임 설정`;
-    showScreen('gameSettings');
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-// 게임 시작
-function startGame() {
-    console.log('startGame called');
-    const winScoreInput = document.querySelector('input[name="winScore"]:checked');
-    const totalSetsInput = document.querySelector('input[name="totalSets"]:checked');
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
 
-    if (!winScoreInput || !totalSetsInput) {
-        alert('게임 설정을 선택해주세요.');
-        return;
+/* 모바일 전체화면 클래스 */
+body.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+body.mobile {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+}
+
+.screen {
+    display: none !important;
+    width: 100%;
+    height: 100vh;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.screen.active {
+    display: flex !important;
+}
+
+/* 게임 선택 화면 - 모바일에서 전체화면 */
+#gameSelection {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    padding: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+#gameSelection h1 {
+    color: white;
+    font-size: clamp(2rem, 8vw, 3rem);
+    margin-bottom: 2rem;
+    text-align: left;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    width: 100%;
+}
+
+.game-buttons {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    width: 100%;
+}
+
+.game-btn {
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 20px;
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    min-width: 140px;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+}
+
+.game-btn:hover, .game-btn:active {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.3);
+    background: rgba(255, 255, 255, 1);
+}
+
+.game-icon {
+    font-size: clamp(3rem, 12vw, 5rem);
+    margin-bottom: 1rem;
+}
+
+.game-name {
+    font-size: clamp(1.2rem, 4vw, 1.8rem);
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+}
+
+/* 게임 설정 화면 */
+#gameSettings {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 3rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    max-width: 500px;
+    width: 90%;
+}
+
+#selectedGameTitle {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #333;
+    font-size: 2rem;
+}
+
+.settings-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.setting-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.setting-group label {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.radio-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.radio-group input[type="radio"] {
+    display: none;
+}
+
+.radio-group label {
+    background: #f0f0f0;
+    padding: 0.8rem 1.5rem;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    touch-action: manipulation;
+}
+
+.radio-group input[type="radio"]:checked + label {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.start-btn {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+    touch-action: manipulation;
+}
+
+.start-btn:hover, .start-btn:active {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* 점수판 화면 - 모바일 최적화 */
+#scoreboard {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* ...existing code... */
+.serve-change-alert {
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffeb3b;
+    color: #333;
+    font-size: 2rem;
+    font-weight: bold;
+    padding: 1rem 2rem;
+    border-radius: 30px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    z-index: 9999;
+    animation: fadeInOut 1.5s;
+}
+
+.score-display.serve {
+    color: #e53935 !important;
+    text-shadow: 2px 2px 8px rgba(229,57,53,0.2);
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { opacity: 0; }
+}
+/* ...existing code... */
+.sets-display {
+    text-align: center;
+    padding: 1rem;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-radius: 0;
+    color: white;
+    flex-shrink: 0;
+    height: 15vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.set-scores {
+    font-size: clamp(2rem, 8vw, 4rem);
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+.separator {
+    margin: 0 1rem;
+    opacity: 0.8;
+}
+
+.current-set {
+    font-size: clamp(0.9rem, 3vw, 1.2rem);
+    opacity: 0.9;
+}
+
+.scoreboard-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    flex: 1;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    min-height: 0;
+    height: 70vh;
+}
+
+.player-score {
+    flex: 1;
+    text-align: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+    width: 50%;
+    height: 100%;
+    min-width: 0;
+}
+
+.player-score:active {
+    /* 레이아웃 흔들림 방지를 위해 축소 효과 제거 */
+    transform: none;
+    background: #e9ecef;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.player-name {
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+}
+
+/* 점수 숫자 고정폭과 최소 폭 예약으로 자릿수 증가 시 레이아웃 고정 */
+.score-display {
+    font-size: clamp(6rem, 25vw, 20rem);
+    font-weight: bold;
+    color: #667eea;
+    margin: 0.5rem 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    line-height: 1;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
+    min-width: 3ch; /* 두 자리 이상을 위해 최소 폭 예약 */
+    box-sizing: border-box;
+}
+
+.touch-hint {
+    font-size: clamp(0.8rem, 2.5vw, 1rem);
+    color: #666;
+    margin-top: 0.5rem;
+    flex-shrink: 0;
+}
+
+.vs-divider {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+    font-weight: bold;
+    color: #333;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.control-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    padding: 1rem;
+    flex-direction: row;
+    background: rgba(255, 255, 255, 0.95);
+    border-top: 1px solid #e9ecef;
+    height: 15vh;
+    align-items: center;
+}
+
+.control-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.5rem;
+    touch-action: manipulation;
+    flex: 1;
+    min-width: 60px;
+    max-width: 80px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.control-btn:hover, .control-btn:active {
+    background: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* 게임 종료 화면 */
+#gameEnd {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 3rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+}
+
+#gameEnd h2 {
+    color: #333;
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+.winner-display {
+    margin: 2rem 0;
+}
+
+.winner-text {
+    font-size: 1.5rem;
+    color: #667eea;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.final-score {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.end-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.end-btn {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
+    touch-action: manipulation;
+}
+
+.end-btn:hover, .end-btn:active {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* 반응형 디자인 - 모바일 최적화 */
+@media (max-width: 768px) {
+    .game-buttons {
+        flex-direction: column;
+        gap: 1.5rem;
+        width: 100%;
+    }
+    
+    .game-btn {
+        min-width: 120px;
+        min-height: 120px;
+        padding: 1.5rem;
+        width: 100%;
+        max-width: 200px;
+    }
+    
+    .game-icon {
+        font-size: 4rem;
+    }
+    
+    .game-name {
+        font-size: 1.5rem;
+    }
+    
+    #scoreboard {
+        padding: 0;
+        border-radius: 0;
+    }
+    
+    .scoreboard-container {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 0.5rem;
+        height: 70vh;
+    }
+    
+    .player-score {
+        width: 100%;
+        padding: 1rem;
+        min-height: 200px;
+        height: 50%;
+    }
+    
+    .score-display {
+        font-size: clamp(8rem, 30vw, 15rem);
+    }
+    
+    .vs-divider {
+        font-size: 2rem;
+        padding: 1rem;
+        order: -1;
+    }
+    
+    .control-buttons {
+        flex-direction: row;
+        gap: 0.5rem;
+        padding: 1rem;
+        height: 15vh;
+    }
+    
+    .control-btn {
+        flex: 1;
+        min-width: 0;
+        padding: 1rem;
+        font-size: 1.2rem;
+        height: 50px;
+        max-width: none;
+    }
+    
+    .sets-display {
+        padding: 0.5rem;
+        height: 15vh;
+    }
+    
+    .set-scores {
+        font-size: 2.5rem;
+    }
+    
+    .current-set {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .screen {
+        padding: 10px;
+    }
+    
+    #gameSelection {
+        padding: 1rem;
+    }
+    
+    #gameSelection h1 {
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .game-btn {
+        min-width: 100px;
+        min-height: 100px;
+        padding: 1rem;
+    }
+    
+    .game-icon {
+        font-size: 3rem;
+    }
+    
+    .game-name {
+        font-size: 1.2rem;
+    }
+    
+    #gameSettings {
+        padding: 2rem 1rem;
+    }
+    
+    .score-display {
+        font-size: clamp(6rem, 25vw, 12rem);
+    }
+    
+    .player-name {
+        font-size: 1.5rem;
+    }
+    
+    .touch-hint {
+        font-size: 0.9rem;
+    }
+    
+    .control-buttons {
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+    
+    .control-btn {
+        width: 100%;
+        padding: 0.8rem;
+        font-size: 1rem;
+        height: 45px;
+    }
+}
+
+/* 세로 모드에서의 최적화 */
+@media (orientation: portrait) and (max-height: 600px) {
+    .scoreboard-container {
+        margin: 0.5rem 0;
+        height: 65vh;
+    }
+    
+    .score-display {
+        font-size: clamp(5rem, 20vw, 10rem);
+    }
+    
+    .sets-display {
+        margin-bottom: 0.25rem;
+        padding: 0.5rem;
+        height: 12vh;
+    }
+    
+    .player-score {
+        padding: 0.5rem;
+    }
+    
+    .control-buttons {
+        flex-direction: row;
+        height: 12vh;
+        padding: 0.5rem;
+    }
+}
+
+/* 가로 모드에서의 최적화 */
+@media (orientation: landscape) and (max-height: 500px) {
+    #scoreboard {
+        flex-direction: row;
+        align-items: center;
+        padding: 0.5rem;
+    }
+    
+    .sets-display {
+        margin-bottom: 0;
+        margin-right: 1rem;
+        flex-shrink: 0;
+        width: 120px;
+        height: auto;
+    }
+    
+    .scoreboard-container {
+        margin: 0 1rem;
+        flex: 1;
+        height: auto;
+    }
+    
+    .control-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+        flex-shrink: 0;
+        width: 120px;
+        height: auto;
+    }
+    
+    .control-btn {
+        width: 100%;
+        padding: 0.5rem;
+        font-size: 0.8rem;
+        height: 45px;
     }
 
-    gameState.winScore = parseInt(winScoreInput.value);
-    gameState.totalSets = parseInt(totalSetsInput.value);
-    gameState.currentSet = 1;
-    gameState.player1Score = 0;
-    gameState.player2Score = 0;
-    gameState.player1Sets = 0;
-    gameState.player2Sets = 0;
-    gameState.scoreHistory = [];
+    /* 가운데 VS는 숨겨 두 영역을 정확히 절반으로 */
+    .vs-divider { display: none; }
 
-    updateScoreboard();
-    showScreen('scoreboard');
-
-    // 게임 시작 안내
-    speakScore('게임 시작!');
-}
-
-// 화면 전환
-function showScreen(screenId) {
-    console.log('showScreen called with:', screenId);
-
-    // 모든 화면 비활성화
-    document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.remove('active');
-    });
-
-    // 지정된 화면 활성화
-    const targetScreen = document.getElementById(screenId);
-    if (targetScreen) {
-        targetScreen.classList.add('active');
-        console.log('Screen activated:', screenId);
-    } else {
-        console.error('Screen not found:', screenId);
+    /* 설정 화면이 잘리지 않도록 스크롤 허용 및 여백 보정 */
+    #gameSettings { 
+        overflow: auto; 
+        padding-top: max(1rem, env(safe-area-inset-top));
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
     }
 
-    // 모바일에서 전체화면 설정
-    if (screenId === 'scoreboard') {
-        document.body.classList.add('fullscreen');
-        // 모바일에서 화면 방향 고정
-        if (targetScreen && targetScreen.orientation && targetScreen.orientation.lock) {
-            targetScreen.orientation.lock('portrait').catch(() => {
-                // 방향 잠금이 지원되지 않는 경우 무시
-            });
-        }
-    } else {
-        document.body.classList.remove('fullscreen');
+    /* 선택/종료 화면들도 스크롤 가능하도록 */
+    #gameSelection, #gameEnd { 
+        overflow: auto; 
+        padding-top: max(1rem, env(safe-area-inset-top));
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
     }
 }
 
-// 점수판 업데이트
-function updateScoreboard() {
-    document.getElementById('score1').textContent = gameState.player1Score;
-    document.getElementById('score2').textContent = gameState.player2Score;
-    document.getElementById('player1Sets').textContent = gameState.player1Sets;
-    document.getElementById('player2Sets').textContent = gameState.player2Sets;
-    document.getElementById('currentSetNumber').textContent = gameState.currentSet;
-}
-
-// 점수 증가
-function increaseScore(player) {
-    const currentTime = new Date().getTime();
-    const timeDiff = currentTime - gameState.lastTapTime;
-
-    if (timeDiff < gameState.doubleTapDelay) {
-        // 더블 탭 - 점수 감소
-        decreaseScore(player);
-        return;
+/* 모바일 전체화면 최적화 */
+@media (max-width: 768px) {
+    body {
+        position: fixed;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
     }
-
-    gameState.lastTapTime = currentTime;
-
-    // 점수 기록
-    gameState.scoreHistory.push({
-        player: player,
-        action: 'increase',
-        score: player === 1 ? gameState.player1Score : gameState.player2Score,
-        set: gameState.currentSet
-    });
-
-    // 점수 증가
-    updateScore(player, 1);
-}
-
-// 점수 감소
-function decreaseScore(player) {
-    if (player === 1 && gameState.player1Score > 0) {
-        updateScore(player, -1);
-    } else if (player === 2 && gameState.player2Score > 0) {
-        updateScore(player, -1);
+    
+    .screen {
+        width: 100vw;
+        height: 100vh;
+        max-width: none;
+        padding: 1rem;
+    }
+    
+    #gameSelection {
+        width: 100vw;
+        height: 100vh;
+        padding: 2rem 1rem;
+    }
+    
+    #scoreboard {
+        width: 100vw;
+        height: 100vh;
+        padding: 0.5rem;
     }
 }
 
-// 서브 체인지 알림 (탁구/배드민턴)
-let serveChangeRule = 2; // 예: 2점마다 서브 교체 (게임 설정에서 받아옴)
-let totalPoints = 0;     // 두 선수 점수 합
-// ...existing code...
-let currentServer = 1; // 1번 또는 2번 플레이어가 서브권
-
-function updateScore(player, delta) {
-    if (player === 1) {
-        gameState.player1Score += delta;
-    } else {
-        gameState.player2Score += delta;
+/* 터치 최적화 */
+@media (hover: none) and (pointer: coarse) {
+    .player-score {
+        min-height: 150px;
     }
-    totalPoints = gameState.player1Score + gameState.player2Score;
-
-    // 듀스 상황 체크
-    let isDeuce = (gameState.player1Score >= gameState.winScore - 1 &&
-                   gameState.player2Score >= gameState.winScore - 1);
-
-    let currentServeChangeRule = isDeuce ? 1 : serveChangeRule;
-
-    // 서브권 계산
-    if (totalPoints === 0) {
-        currentServer = 1; // 첫 서브는 1번 플레이어
-    } else {
-        // serveChangeRule마다 서브권 변경
-        let serveTurn = Math.floor(totalPoints / currentServeChangeRule) % 2;
-        currentServer = serveTurn === 0 ? 1 : 2;
+    
+    .score-display {
+        font-size: clamp(8rem, 30vw, 20rem);
     }
-
-    speakScore(`${gameState.player1Score} 대 ${gameState.player2Score}`);
-
-    updateScoreboard();
-    updateServeColor();
-
-
-    const player1Wins = gameState.player1Score >= gameState.winScore &&
-        (gameState.player1Score - gameState.player2Score) >= 2;
-    const player2Wins = gameState.player2Score >= gameState.winScore &&
-        (gameState.player2Score - gameState.player1Score) >= 2;
-
-    if (player1Wins || player2Wins) {
-        const winner = player1Wins ? 1 : 2;
-        endSet(winner);
+    
+    .game-btn {
+        min-height: 120px;
     }
-    else {
-        if (totalPoints > 0 && totalPoints % currentServeChangeRule === 0) {
-            showServeChangeAlert();
-        }
+    
+    .control-btn {
+        min-height: 44px;
     }
 }
 
-function updateServeColor() {
-    document.getElementById('score1').classList.toggle('serve', currentServer === 1);
-    document.getElementById('score2').classList.toggle('serve', currentServer === 2);
+/* iOS 최적화 */
+body.ios {
+    -webkit-overflow-scrolling: touch;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
-function showServeChangeAlert() {
-    // 화면에 서브 교체 알림 표시
-    const alert = document.createElement('div');
-    alert.className = 'serve-change-alert';
-    alert.textContent = '서브 교체!';
-    speakScore(`서브 교체!`);
-    document.body.appendChild(alert);
-    setTimeout(() => alert.remove(), 1500); // 1.5초 후 자동 제거
+body.ios .player-score {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
-// 세트 종료 확인
-function checkSetEnd() {
-    const player1Wins = gameState.player1Score >= gameState.winScore &&
-        (gameState.player1Score - gameState.player2Score) >= 2;
-    const player2Wins = gameState.player2Score >= gameState.winScore &&
-        (gameState.player2Score - gameState.player1Score) >= 2;
+body.ios .game-btn,
+body.ios .control-btn,
+body.ios .start-btn,
+body.ios .end-btn {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
 
-    if (player1Wins || player2Wins) {
-        const winner = player1Wins ? 1 : 2;
-        endSet(winner);
+/* Android 최적화 */
+body.android .player-score {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body.android .game-btn,
+body.android .control-btn,
+body.android .start-btn,
+body.android .end-btn {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* 안전 영역 지원 (iPhone X 이상) */
+@supports (padding: max(0px)) {
+    body {
+        padding-left: max(0px, env(safe-area-inset-left));
+        padding-right: max(0px, env(safe-area-inset-right));
+        padding-top: max(0px, env(safe-area-inset-top));
+        padding-bottom: max(0px, env(safe-area-inset-bottom));
+    }
+    
+    #scoreboard {
+        padding-left: max(0.5rem, env(safe-area-inset-left));
+        padding-right: max(0.5rem, env(safe-area-inset-right));
+        padding-top: max(0.5rem, env(safe-area-inset-top));
+        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+    }
+    
+    #gameSelection {
+        padding-left: max(2rem, env(safe-area-inset-left));
+        padding-right: max(2rem, env(safe-area-inset-right));
+        padding-top: max(2rem, env(safe-area-inset-top));
+        padding-bottom: max(2rem, env(safe-area-inset-bottom));
     }
 }
 
-// 세트 종료
-function endSet(winner) {
-    if (winner === 1) {
-        gameState.player1Sets++;
-        speakScore('플레이어 1 세트 승리!');
-    } else {
-        gameState.player2Sets++;
-        speakScore('플레이어 2 세트 승리!');
+/* 고해상도 디스플레이 최적화 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .player-score {
+        border-radius: 20px;
     }
-
-    updateScoreboard();
-
-    // 게임 종료 확인
-    const neededSets = Math.ceil(gameState.totalSets / 2);
-    if (gameState.player1Sets >= neededSets || gameState.player2Sets >= neededSets) {
-        endGame();
-    } else {
-        // 다음 세트 시작
-        setTimeout(() => {
-            gameState.currentSet++;
-            gameState.player1Score = 0;
-            gameState.player2Score = 0;
-            updateScoreboard();
-            speakScore(`${gameState.currentSet}세트 시작! 0 대 0`);
-        }, 2000);
+    
+    .game-btn {
+        border-radius: 20px;
+    }
+    
+    .control-btn,
+    .start-btn,
+    .end-btn {
+        border-radius: 20px;
     }
 }
 
-// 게임 종료
-function endGame() {
-    const winner = gameState.player1Sets > gameState.player2Sets ? 1 : 2;
-    const winnerText = `플레이어 ${winner} 승리!`;
-    const finalScore = `${gameState.player1Sets} - ${gameState.player2Sets}`;
-
-    document.getElementById('winnerText').textContent = winnerText;
-    document.getElementById('finalScore').textContent = finalScore;
-
-    speakScore(`게임 종료! ${winnerText}`);
-
-    setTimeout(() => {
-        showScreen('gameEnd');
-    }, 3000);
-}
-
-// 세트 리셋
-function resetSet() {
-    gameState.player1Score = 0;
-    gameState.player2Score = 0;
-    updateScoreboard();
-    speakScore('0 대 0, 세트 리셋');
-}
-
-// 마지막 점수 취소
-function undoLastScore() {
-    if (gameState.scoreHistory.length > 0) {
-        const lastAction = gameState.scoreHistory.pop();
-        if (lastAction.action === 'increase') {
-            if (lastAction.player === 1) {
-                gameState.player1Score--;
-            } else {
-                gameState.player2Score--;
-            }
-        }
-        updateScoreboard();
-        speakScore('실수 수정 완료');
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    }
+    
+    #gameSettings,
+    #gameEnd {
+        background: rgba(44, 62, 80, 0.95);
+        color: #ecf0f1;
+    }
+    
+    #selectedGameTitle,
+    .setting-group label {
+        color: #ecf0f1;
+    }
+    
+    .radio-group label {
+        background: #34495e;
+        color: #ecf0f1;
+    }
+    
+    .radio-group input[type="radio"]:checked + label {
+        background: #3498db;
+        color: white;
+    }
+    
+    .player-score {
+        background: #34495e;
+        color: #ecf0f1;
+    }
+    
+    .player-name {
+        color: #ecf0f1;
+    }
+    
+    .score-display {
+        color: #3498db;
+    }
+    
+    .touch-hint {
+        color: #bdc3c7;
+    }
+    
+    .vs-divider {
+        color: #ecf0f1;
+    }
+    
+    .control-btn {
+        background: #7f8c8d;
+        color: #ecf0f1;
+    }
+    
+    .control-btn:hover,
+    .control-btn:active {
+        background: #6c7b7d;
+    }
+    
+    .winner-text {
+        color: #3498db;
+    }
+    
+    .final-score {
+        color: #ecf0f1;
     }
 }
 
-// 음성 안내
-function speakScore(text) {
-    if (speechSynthesis) {
-        // 이전 음성 중지
-        if (speechUtterance) {
-            speechSynthesis.cancel();
-        }
-
-        speechUtterance = new SpeechSynthesisUtterance(text);
-        speechUtterance.lang = 'ko-KR';
-        speechUtterance.rate = 0.8;
-        speechUtterance.pitch = 1.0;
-        speechSynthesis.speak(speechUtterance);
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .player-score:active {
+        transform: none;
+    }
+    
+    .game-btn:hover,
+    .game-btn:active {
+        transform: none;
+    }
+    
+    .control-btn:hover,
+    .control-btn:active {
+        transform: none;
+    }
+    
+    .start-btn:hover,
+    .start-btn:active {
+        transform: none;
+    }
+    
+    .end-btn:hover,
+    .end-btn:active {
+        transform: none;
     }
 }
 
-// 게임 선택 화면으로 이동
-function showGameSelection() {
-    console.log('showGameSelection called');
-    showScreen('gameSelection');
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+    .player-score {
+        border: 2px solid #000;
+    }
+    
+    .game-btn {
+        border: 2px solid #000;
+    }
+    
+    .control-btn,
+    .start-btn,
+    .end-btn {
+        border: 2px solid #000;
+    }
+    
+    .score-display {
+        text-shadow: 2px 2px 0 #000;
+    }
 }
 
-// 게임 설정 화면으로 이동
-function showGameSettings() {
-    console.log('showGameSettings called');
-    showScreen('gameSettings');
+/* 점수판 숫자 크기 - 가로 모드에서 축소하여 절반 이상 과대 차지 방지 */
+@media (orientation: landscape) {
+    .score-display {
+        font-size: clamp(4rem, 15vw, 12rem);
+    }
+    .player-score { padding: 0.75rem; }
 }
 
-// 모바일 터치 이벤트 처리
-function handlePlayerScore(player) {
-    const currentTime = new Date().getTime();
-    const timeDiff = currentTime - gameState.lastTapTime;
-
-    if (timeDiff < gameState.doubleTapDelay) {
-        // 더블 탭 - 점수 감소
-        decreaseScore(player);
-    } else {
-        // 단일 탭 - 점수 증가
-        increaseScore(player);
+/* 가로모드: 하단 아이콘 바를 항상 화면에 고정하고 겹침 방지 패딩 적용 */
+@media (orientation: landscape) {
+    /* 하단 고정 바 */
+    .control-buttons {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 12vh;
+        padding: 0.5rem 0.75rem;
+        background: rgba(255, 255, 255, 0.96);
+        border-top: 1px solid #e9ecef;
+        z-index: 1000;
+        display: flex;
+        flex-direction: row;
+        gap: 0.5rem;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: nowrap;
     }
-
-    gameState.lastTapTime = currentTime;
+    /* 점수판 본문이 하단바에 가리지 않도록 여백 */
+    #scoreboard {
+        padding-bottom: 12vh;
+    }
 }
 
-// 초기화 함수
-function initializeApp() {
-    console.log('Initializing app...');
-
-    // 모든 화면을 먼저 비활성화
-    document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.remove('active');
-        console.log('Deactivated screen:', screen.id);
-    });
-
-    // 초기 화면을 게임 선택 화면으로 설정
-    const gameSelectionScreen = document.getElementById('gameSelection');
-    if (gameSelectionScreen) {
-        gameSelectionScreen.classList.add('active');
-        console.log('Activated gameSelection screen');
-    } else {
-        console.error('gameSelection screen not found!');
-    }
-
-    // 게임 상태 초기화
-    gameState.selectedGame = '';
-    gameState.winScore = 11;
-    gameState.totalSets = 3;
-    gameState.currentSet = 1;
-    gameState.player1Score = 0;
-    gameState.player2Score = 0;
-    gameState.player1Sets = 0;
-    gameState.player2Sets = 0;
-    gameState.scoreHistory = [];
-
-    // 현재 활성화된 화면 확인
-    const activeScreen = document.querySelector('.screen.active');
-    console.log('Currently active screen:', activeScreen ? activeScreen.id : 'none');
-
-    console.log('App initialized successfully');
+/* 설정/선택/종료 화면: 가로모드 상단 잘림 방지 (스크롤+상단 여백) */
+#gameSettings.screen,
+#gameSelection.screen,
+#gameEnd.screen {
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
 }
 
-// 이벤트 리스너 설정
-document.addEventListener('DOMContentLoaded', function () {
-    console.log('DOM Content Loaded');
-
-    // 앱 초기화
-    initializeApp();
-
-    // 플레이어 1 점수 터치
-    const player1Score = document.getElementById('player1Score');
-    const player2Score = document.getElementById('player2Score');
-
-    if (player1Score && player2Score) {
-        // 클릭 이벤트
-        player1Score.addEventListener('click', function (e) {
-            e.preventDefault();
-            handlePlayerScore(1);
-        });
-
-        player2Score.addEventListener('click', function (e) {
-            e.preventDefault();
-            handlePlayerScore(2);
-        });
-
-        // 키보드 이벤트 (접근성)
-        player1Score.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handlePlayerScore(1);
-            }
-        });
-
-        player2Score.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handlePlayerScore(2);
-            }
-        });
+@media (orientation: landscape) {
+    #gameSettings,
+    #gameSelection,
+    #gameEnd {
+        padding-top: calc(env(safe-area-inset-top) + 2.25rem);
+        padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
     }
-
-    // 모바일 터치 이벤트 최적화
-    let touchStartTime = 0;
-    let touchEndTime = 0;
-    let touchStartX = 0;
-    let touchStartY = 0;
-
-    // 터치 시작
-    document.addEventListener('touchstart', function (e) {
-        touchStartTime = new Date().getTime();
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-    }, { passive: true });
-
-    // 터치 종료
-    document.addEventListener('touchend', function (e) {
-        touchEndTime = new Date().getTime();
-        const touchDuration = touchEndTime - touchStartTime;
-        const touchEndX = e.changedTouches[0].clientX;
-        const touchEndY = e.changedTouches[0].clientY;
-        const touchDistance = Math.sqrt(
-            Math.pow(touchEndX - touchStartX, 2) +
-            Math.pow(touchEndY - touchStartY, 2)
-        );
-
-        // 짧은 터치만 처리 (길게 누르기 방지) 및 이동 거리가 짧은 경우만
-        if (touchDuration < 500 && touchDistance < 50) {
-            const target = e.target.closest('.player-score');
-            if (target) {
-                e.preventDefault();
-                const player = target.id === 'player1Score' ? 1 : 2;
-                handlePlayerScore(player);
-            }
-        }
-    }, { passive: false });
-
-    // 더블 탭 줌 방지
-    document.addEventListener('touchend', function (e) {
-        const now = (new Date()).getTime();
-        if (now - gameState.lastTapTime <= 300) {
-            e.preventDefault();
-        }
-    }, { passive: false });
-
-    // 키보드 단축키
-    document.addEventListener('keydown', function (e) {
-        if (document.getElementById('scoreboard').classList.contains('active')) {
-            switch (e.key) {
-                case '1':
-                    handlePlayerScore(1);
-                    break;
-                case '2':
-                    handlePlayerScore(2);
-                    break;
-                case 'r':
-                case 'R':
-                    resetSet();
-                    break;
-                case 'z':
-                case 'Z':
-                    undoLastScore();
-                    break;
-            }
-        }
-    });
-
-    // 화면 방향 변경 감지
-    window.addEventListener('orientationchange', function () {
-        setTimeout(function () {
-            // 화면 크기 재조정
-            document.body.style.height = window.innerHeight + 'px';
-            document.body.style.width = window.innerWidth + 'px';
-        }, 100);
-    });
-
-    // 리사이즈 이벤트
-    window.addEventListener('resize', function () {
-        document.body.style.height = window.innerHeight + 'px';
-        document.body.style.width = window.innerWidth + 'px';
-    });
-
-    // 초기 화면 크기 설정
-    document.body.style.height = window.innerHeight + 'px';
-    document.body.style.width = window.innerWidth + 'px';
-
-    // 모바일 전체화면 설정
-    if (window.innerWidth <= 768) {
-        document.body.classList.add('mobile');
-    }
-
-    // iOS Safari 최적화
-    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-        document.body.classList.add('ios');
-    }
-
-    // Android Chrome 최적화
-    if (/Android/.test(navigator.userAgent)) {
-        document.body.classList.add('android');
-    }
-
-    console.log('Event listeners set up successfully');
-});
-
-// PWA 지원을 위한 서비스 워커 등록 (일시적으로 비활성화)
-/*
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-        navigator.serviceWorker.register('./sw.js')
-            .then(function(registration) {
-                console.log('ServiceWorker registration successful');
-            })
-            .catch(function(err) {
-                console.log('ServiceWorker registration failed');
-            });
-    });
+    #selectedGameTitle { margin-top: 0; }
 }
 
-// 앱 설치 프롬프트 (일시적으로 비활성화)
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-});
+/* 가로모드: 상단(좌: 세트 점수, 우: 아이콘), 하단(좌/우 점수) */
+@media (orientation: landscape) {
+	#scoreboard {
+		display: grid;
+		grid-template-rows: auto 1fr;   /* 상단 고정, 하단 가변 */
+		grid-template-columns: 1fr 1fr; /* 상단은 좌/우 두 칸 */
+		gap: 0.5rem;
+		height: 100vh;
+		padding: 0.5rem;
+		box-sizing: border-box;
+	}
 
-// 오프라인 지원을 위한 캐시 (일시적으로 비활성화)
-if ('caches' in window) {
-    caches.open('scoreboard-v1').then(function(cache) {
-        return cache.addAll([
-            './',
-            './index.html',
-            './style.css',
-            './script.js',
-            './manifest.json'
-        ]);
-    });
+	/* 상단 좌측: 세트 점수 */
+	.sets-display {
+		grid-row: 1;
+		grid-column: 1;
+		height: auto;
+		padding: 0.5rem 0.75rem;
+		border-radius: 12px;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: flex-start;
+	}
+
+	/* 상단 우측: 컨트롤 아이콘 3개 */
+	.control-buttons {
+		grid-row: 1;
+		grid-column: 2;
+		position: static;
+		height: auto;
+		padding: 0.5rem 0.75rem;
+		background: rgba(255,255,255,0.95);
+		border: 1px solid #e9ecef;
+		border-radius: 12px;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		align-items: center;
+		justify-content: flex-end;
+		flex-wrap: nowrap;
+		z-index: 1;
+	}
+
+	.control-btn {
+		flex: 0 0 auto;
+		width: 56px;
+		height: 56px;
+		min-width: 56px;
+		border-radius: 50%;
+		font-size: 1.4rem;
+		padding: 0;
+	}
+
+	/* 하단 전체: 점수 영역 두 칸(좌/우) */
+	.scoreboard-container {
+		grid-row: 2;
+		grid-column: 1 / span 2; /* 하단은 두 칸 모두 사용 */
+		display: flex;
+		flex-direction: row;
+		align-items: stretch;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: 0.25rem;
+		height: auto;
+		min-height: 0;
+	}
+
+	.player-score {
+		flex: 1 1 0;
+		min-width: 0;
+		height: 100%;
+		padding: 0.75rem;
+	}
+
+	/* 숫자 크기 가로모드 보정: 절반 이상 과대 방지 */
+	.score-display {
+		font-size: clamp(4.5rem, 14vw, 12rem);
+	}
+
+	/* VS는 가로모드에서 숨김 */
+	.vs-divider { display: none; }
 }
-*/
