@@ -229,6 +229,7 @@ body.mobile {
     z-index: 9999;
     animation: fadeInOut 1.5s;
 }
+
 .score-display.serve {
     color: #e53935 !important;
     text-shadow: 2px 2px 8px rgba(229,57,53,0.2);
@@ -1065,3 +1066,4 @@ body.android .end-btn {
 	/* VS는 가로모드에서 숨김 */
 	.vs-divider { display: none; }
 }
+
