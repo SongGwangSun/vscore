@@ -36,12 +36,12 @@ function startGame() {
     console.log('startGame called');
     const winScoreInput = document.querySelector('input[name="winScore"]:checked');
     const totalSetsInput = document.querySelector('input[name="totalSets"]:checked');
-    
+
     if (!winScoreInput || !totalSetsInput) {
         alert('게임 설정을 선택해주세요.');
         return;
     }
-    
+
     gameState.winScore = parseInt(winScoreInput.value);
     gameState.totalSets = parseInt(totalSetsInput.value);
     gameState.currentSet = 1;
@@ -50,10 +50,10 @@ function startGame() {
     gameState.player1Sets = 0;
     gameState.player2Sets = 0;
     gameState.scoreHistory = [];
-    
+
     updateScoreboard();
     showScreen('scoreboard');
-    
+
     // 게임 시작 안내
     speakScore('게임 시작!');
 }
@@ -61,12 +61,12 @@ function startGame() {
 // 화면 전환
 function showScreen(screenId) {
     console.log('showScreen called with:', screenId);
-    
+
     // 모든 화면 비활성화
     document.querySelectorAll('.screen').forEach(screen => {
         screen.classList.remove('active');
     });
-    
+
     // 지정된 화면 활성화
     const targetScreen = document.getElementById(screenId);
     if (targetScreen) {
@@ -75,7 +75,7 @@ function showScreen(screenId) {
     } else {
         console.error('Screen not found:', screenId);
     }
-    
+
     // 모바일에서 전체화면 설정
     if (screenId === 'scoreboard') {
         document.body.classList.add('fullscreen');
@@ -103,15 +103,15 @@ function updateScoreboard() {
 function increaseScore(player) {
     const currentTime = new Date().getTime();
     const timeDiff = currentTime - gameState.lastTapTime;
-    
+
     if (timeDiff < gameState.doubleTapDelay) {
         // 더블 탭 - 점수 감소
         decreaseScore(player);
         return;
     }
-    
+
     gameState.lastTapTime = currentTime;
-    
+
     // 점수 기록
     gameState.scoreHistory.push({
         player: player,
@@ -119,40 +119,93 @@ function increaseScore(player) {
         score: player === 1 ? gameState.player1Score : gameState.player2Score,
         set: gameState.currentSet
     });
-    
+
     // 점수 증가
-    if (player === 1) {
-        gameState.player1Score++;
-        speakScore(`${gameState.player1Score} 대 ${gameState.player2Score}`);
-    } else {
-        gameState.player2Score++;
-        speakScore(`${gameState.player1Score} 대 ${gameState.player2Score}`);
-    }
-    
-    updateScoreboard();
-    checkSetEnd();
+    updateScore(player, 1);
 }
 
 // 점수 감소
 function decreaseScore(player) {
     if (player === 1 && gameState.player1Score > 0) {
-        gameState.player1Score--;
-        speakScore(`${gameState.player1Score} 대 ${gameState.player2Score}`);
+        updateScore(player, -1);
     } else if (player === 2 && gameState.player2Score > 0) {
-        gameState.player2Score--;
-        speakScore(`${gameState.player1Score} 대 ${gameState.player2Score}`);
+        updateScore(player, -1);
     }
-    
+}
+
+// 서브 체인지 알림 (탁구/배드민턴)
+let serveChangeRule = 2; // 예: 2점마다 서브 교체 (게임 설정에서 받아옴)
+let totalPoints = 0;     // 두 선수 점수 합
+// ...existing code...
+let currentServer = 1; // 1번 또는 2번 플레이어가 서브권
+
+function updateScore(player, delta) {
+    if (player === 1) {
+        gameState.player1Score += delta;
+    } else {
+        gameState.player2Score += delta;
+    }
+    totalPoints = gameState.player1Score + gameState.player2Score;
+
+    // 듀스 상황 체크
+    let isDeuce = (gameState.player1Score >= gameState.winScore - 1 &&
+                   gameState.player2Score >= gameState.winScore - 1);
+
+    let currentServeChangeRule = isDeuce ? 1 : serveChangeRule;
+
+    // 서브권 계산
+    if (totalPoints === 0) {
+        currentServer = 1; // 첫 서브는 1번 플레이어
+    } else {
+        // serveChangeRule마다 서브권 변경
+        let serveTurn = Math.floor(totalPoints / currentServeChangeRule) % 2;
+        currentServer = serveTurn === 0 ? 1 : 2;
+    }
+
+    speakScore(`${gameState.player1Score} 대 ${gameState.player2Score}`);
+
     updateScoreboard();
+    updateServeColor();
+
+
+    const player1Wins = gameState.player1Score >= gameState.winScore &&
+        (gameState.player1Score - gameState.player2Score) >= 2;
+    const player2Wins = gameState.player2Score >= gameState.winScore &&
+        (gameState.player2Score - gameState.player1Score) >= 2;
+
+    if (player1Wins || player2Wins) {
+        const winner = player1Wins ? 1 : 2;
+        endSet(winner);
+    }
+    else {
+        if (totalPoints > 0 && totalPoints % currentServeChangeRule === 0) {
+            showServeChangeAlert();
+        }
+    }
+}
+
+function updateServeColor() {
+    document.getElementById('score1').classList.toggle('serve', currentServer === 1);
+    document.getElementById('score2').classList.toggle('serve', currentServer === 2);
+}
+
+function showServeChangeAlert() {
+    // 화면에 서브 교체 알림 표시
+    const alert = document.createElement('div');
+    alert.className = 'serve-change-alert';
+    alert.textContent = '서브 교체!';
+    speakScore(`서브 교체!`);
+    document.body.appendChild(alert);
+    setTimeout(() => alert.remove(), 1500); // 1.5초 후 자동 제거
 }
 
 // 세트 종료 확인
 function checkSetEnd() {
-    const player1Wins = gameState.player1Score >= gameState.winScore && 
-                       (gameState.player1Score - gameState.player2Score) >= 2;
-    const player2Wins = gameState.player2Score >= gameState.winScore && 
-                       (gameState.player2Score - gameState.player1Score) >= 2;
-    
+    const player1Wins = gameState.player1Score >= gameState.winScore &&
+        (gameState.player1Score - gameState.player2Score) >= 2;
+    const player2Wins = gameState.player2Score >= gameState.winScore &&
+        (gameState.player2Score - gameState.player1Score) >= 2;
+
     if (player1Wins || player2Wins) {
         const winner = player1Wins ? 1 : 2;
         endSet(winner);
@@ -168,9 +221,9 @@ function endSet(winner) {
         gameState.player2Sets++;
         speakScore('플레이어 2 세트 승리!');
     }
-    
+
     updateScoreboard();
-    
+
     // 게임 종료 확인
     const neededSets = Math.ceil(gameState.totalSets / 2);
     if (gameState.player1Sets >= neededSets || gameState.player2Sets >= neededSets) {
@@ -192,12 +245,12 @@ function endGame() {
     const winner = gameState.player1Sets > gameState.player2Sets ? 1 : 2;
     const winnerText = `플레이어 ${winner} 승리!`;
     const finalScore = `${gameState.player1Sets} - ${gameState.player2Sets}`;
-    
+
     document.getElementById('winnerText').textContent = winnerText;
     document.getElementById('finalScore').textContent = finalScore;
-    
+
     speakScore(`게임 종료! ${winnerText}`);
-    
+
     setTimeout(() => {
         showScreen('gameEnd');
     }, 3000);
@@ -234,7 +287,7 @@ function speakScore(text) {
         if (speechUtterance) {
             speechSynthesis.cancel();
         }
-        
+
         speechUtterance = new SpeechSynthesisUtterance(text);
         speechUtterance.lang = 'ko-KR';
         speechUtterance.rate = 0.8;
@@ -259,7 +312,7 @@ function showGameSettings() {
 function handlePlayerScore(player) {
     const currentTime = new Date().getTime();
     const timeDiff = currentTime - gameState.lastTapTime;
-    
+
     if (timeDiff < gameState.doubleTapDelay) {
         // 더블 탭 - 점수 감소
         decreaseScore(player);
@@ -267,20 +320,20 @@ function handlePlayerScore(player) {
         // 단일 탭 - 점수 증가
         increaseScore(player);
     }
-    
+
     gameState.lastTapTime = currentTime;
 }
 
 // 초기화 함수
 function initializeApp() {
     console.log('Initializing app...');
-    
+
     // 모든 화면을 먼저 비활성화
     document.querySelectorAll('.screen').forEach(screen => {
         screen.classList.remove('active');
         console.log('Deactivated screen:', screen.id);
     });
-    
+
     // 초기 화면을 게임 선택 화면으로 설정
     const gameSelectionScreen = document.getElementById('gameSelection');
     if (gameSelectionScreen) {
@@ -289,7 +342,7 @@ function initializeApp() {
     } else {
         console.error('gameSelection screen not found!');
     }
-    
+
     // 게임 상태 초기화
     gameState.selectedGame = '';
     gameState.winScore = 11;
@@ -300,77 +353,77 @@ function initializeApp() {
     gameState.player1Sets = 0;
     gameState.player2Sets = 0;
     gameState.scoreHistory = [];
-    
+
     // 현재 활성화된 화면 확인
     const activeScreen = document.querySelector('.screen.active');
     console.log('Currently active screen:', activeScreen ? activeScreen.id : 'none');
-    
+
     console.log('App initialized successfully');
 }
 
 // 이벤트 리스너 설정
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     console.log('DOM Content Loaded');
-    
+
     // 앱 초기화
     initializeApp();
-    
+
     // 플레이어 1 점수 터치
     const player1Score = document.getElementById('player1Score');
     const player2Score = document.getElementById('player2Score');
-    
+
     if (player1Score && player2Score) {
         // 클릭 이벤트
-        player1Score.addEventListener('click', function(e) {
+        player1Score.addEventListener('click', function (e) {
             e.preventDefault();
             handlePlayerScore(1);
         });
-        
-        player2Score.addEventListener('click', function(e) {
+
+        player2Score.addEventListener('click', function (e) {
             e.preventDefault();
             handlePlayerScore(2);
         });
-        
+
         // 키보드 이벤트 (접근성)
-        player1Score.addEventListener('keydown', function(e) {
+        player1Score.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 handlePlayerScore(1);
             }
         });
-        
-        player2Score.addEventListener('keydown', function(e) {
+
+        player2Score.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 handlePlayerScore(2);
             }
         });
     }
-    
+
     // 모바일 터치 이벤트 최적화
     let touchStartTime = 0;
     let touchEndTime = 0;
     let touchStartX = 0;
     let touchStartY = 0;
-    
+
     // 터치 시작
-    document.addEventListener('touchstart', function(e) {
+    document.addEventListener('touchstart', function (e) {
         touchStartTime = new Date().getTime();
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
     }, { passive: true });
-    
+
     // 터치 종료
-    document.addEventListener('touchend', function(e) {
+    document.addEventListener('touchend', function (e) {
         touchEndTime = new Date().getTime();
         const touchDuration = touchEndTime - touchStartTime;
         const touchEndX = e.changedTouches[0].clientX;
         const touchEndY = e.changedTouches[0].clientY;
         const touchDistance = Math.sqrt(
-            Math.pow(touchEndX - touchStartX, 2) + 
+            Math.pow(touchEndX - touchStartX, 2) +
             Math.pow(touchEndY - touchStartY, 2)
         );
-        
+
         // 짧은 터치만 처리 (길게 누르기 방지) 및 이동 거리가 짧은 경우만
         if (touchDuration < 500 && touchDistance < 50) {
             const target = e.target.closest('.player-score');
@@ -381,19 +434,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }, { passive: false });
-    
+
     // 더블 탭 줌 방지
-    document.addEventListener('touchend', function(e) {
+    document.addEventListener('touchend', function (e) {
         const now = (new Date()).getTime();
         if (now - gameState.lastTapTime <= 300) {
             e.preventDefault();
         }
     }, { passive: false });
-    
+
     // 키보드 단축키
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
         if (document.getElementById('scoreboard').classList.contains('active')) {
-            switch(e.key) {
+            switch (e.key) {
                 case '1':
                     handlePlayerScore(1);
                     break;
@@ -411,41 +464,41 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-    
+
     // 화면 방향 변경 감지
-    window.addEventListener('orientationchange', function() {
-        setTimeout(function() {
+    window.addEventListener('orientationchange', function () {
+        setTimeout(function () {
             // 화면 크기 재조정
             document.body.style.height = window.innerHeight + 'px';
             document.body.style.width = window.innerWidth + 'px';
         }, 100);
     });
-    
+
     // 리사이즈 이벤트
-    window.addEventListener('resize', function() {
+    window.addEventListener('resize', function () {
         document.body.style.height = window.innerHeight + 'px';
         document.body.style.width = window.innerWidth + 'px';
     });
-    
+
     // 초기 화면 크기 설정
     document.body.style.height = window.innerHeight + 'px';
     document.body.style.width = window.innerWidth + 'px';
-    
+
     // 모바일 전체화면 설정
     if (window.innerWidth <= 768) {
         document.body.classList.add('mobile');
     }
-    
+
     // iOS Safari 최적화
     if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
         document.body.classList.add('ios');
     }
-    
+
     // Android Chrome 최적화
     if (/Android/.test(navigator.userAgent)) {
         document.body.classList.add('android');
     }
-    
+
     console.log('Event listeners set up successfully');
 });
 
