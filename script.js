@@ -19,13 +19,22 @@ let gameState = {
 let speechSynthesis = window.speechSynthesis;
 let speechUtterance = null;
 
+// 서브 체인지 알림 (탁구/배드민턴)
+let serveChangeRule = 2; // 예: 2점마다 서브 교체 (게임 설정에서 받아옴)
+let totalPoints = 0;     // 두 선수 점수 합
+let currentServer = 1;  // 1번 또는 2번 플레이어가 서브권
+let ServerCount = 1;    // 배드민턴 서브 규칙 (처음만 1인 서브 교체)
+let ServerChange = 0;   // 서브 교체
+
 // 게임 선택
 function selectGame(game) {
     console.log('selectGame called with:', game);
     gameState.selectedGame = game;
     const gameNames = {
         'pingpong': '탁구',
-        'badminton': '배드민턴'
+        'badminton': '배드민턴',
+        'Jokgu': '족구'
+
     };
     document.getElementById('selectedGameTitle').textContent = `${gameNames[game]} 게임 설정`;
     showScreen('gameSettings');
@@ -50,6 +59,12 @@ function startGame() {
     gameState.player1Sets = 0;
     gameState.player2Sets = 0;
     gameState.scoreHistory = [];
+
+    serveChangeRule = 2; // 예: 2점마다 서브 교체 (게임 설정에서 받아옴)
+    totalPoints = 0;     // 두 선수 점수 합
+    currentServer = 1;  // 1번 또는 2번 플레이어가 서브권
+    ServerCount = 1;    // 배드민턴 서브 규칙 (처음만 1인 서브 교체)
+    ServerChange = 0;   // 서브 교체
 
     updateScoreboard();
     showScreen('scoreboard');
@@ -133,12 +148,6 @@ function decreaseScore(player) {
     }
 }
 
-// 서브 체인지 알림 (탁구/배드민턴)
-let serveChangeRule = 2; // 예: 2점마다 서브 교체 (게임 설정에서 받아옴)
-let totalPoints = 0;     // 두 선수 점수 합
-// ...existing code...
-let currentServer = 1; // 1번 또는 2번 플레이어가 서브권
-
 function updateScore(player, delta) {
     if (player === 1) {
         gameState.player1Score += delta;
@@ -149,17 +158,40 @@ function updateScore(player, delta) {
 
     // 듀스 상황 체크
     let isDeuce = (gameState.player1Score >= gameState.winScore - 1 &&
-                   gameState.player2Score >= gameState.winScore - 1);
+        gameState.player2Score >= gameState.winScore - 1);
 
     let currentServeChangeRule = isDeuce ? 1 : serveChangeRule;
 
     // 서브권 계산
+    // serveChangeRule마다 서브권 변경
     if (totalPoints === 0) {
         currentServer = 1; // 첫 서브는 1번 플레이어
     } else {
-        // serveChangeRule마다 서브권 변경
-        let serveTurn = Math.floor(totalPoints / currentServeChangeRule) % 2;
-        currentServer = serveTurn === 0 ? 1 : 2;
+        ServerChange = 0; // 서브 교체
+
+        if (gameState.selectedGame == 'badminton') {
+            if (currentServer != player && ServerCount == 1) {
+                ServerCount = 2; // 서브권이 바뀌었으므로 2로 변경
+                currentServer = player; // 서브권을 점수 올린 플레이어로 변경
+                ServerChange = 1; // 서브 교체
+            }
+            else if (currentServer != player && ServerCount == 2) {
+                ServerCount = 1; // 서브권이 바뀌었으므로 1로 변경
+                // currentServer = player; // 서브권을 점수 올린 플레이어로 변경
+            }
+        }
+        else if (gameState.selectedGame == 'pingpong') {
+            let serveTurn = Math.floor(totalPoints / currentServeChangeRule) % 2;
+            currentServer = serveTurn === 0 ? 1 : 2;
+            ServerChange = 1; // 서브 교체
+        }
+        else if (gameState.selectedGame == 'Jokgu') {
+            if (currentServer != player) {
+                currentServer = player; // 서브권을 점수 올린 플레이어로 변경
+                currentServeChangeRule = 1; // 족구는 매 점수마다 서브 교체
+                ServerChange = 1; // 서브 교체
+            }
+        }
     }
 
     speakScore(`${gameState.player1Score} 대 ${gameState.player2Score}`);
@@ -178,7 +210,7 @@ function updateScore(player, delta) {
         endSet(winner);
     }
     else {
-        if (totalPoints > 0 && totalPoints % currentServeChangeRule === 0) {
+        if (totalPoints > 0 && totalPoints % currentServeChangeRule === 0 && ServerChange == 1) {
             showServeChangeAlert();
         }
     }
@@ -503,14 +535,14 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // PWA 지원을 위한 서비스 워커 등록 (일시적으로 비활성화)
-/*
+
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
+    window.addEventListener('load', function () {
         navigator.serviceWorker.register('./sw.js')
-            .then(function(registration) {
+            .then(function (registration) {
                 console.log('ServiceWorker registration successful');
             })
-            .catch(function(err) {
+            .catch(function (err) {
                 console.log('ServiceWorker registration failed');
             });
     });
@@ -525,7 +557,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 // 오프라인 지원을 위한 캐시 (일시적으로 비활성화)
 if ('caches' in window) {
-    caches.open('scoreboard-v1').then(function(cache) {
+    caches.open('scoreboard-v1').then(function (cache) {
         return cache.addAll([
             './',
             './index.html',
@@ -535,4 +567,4 @@ if ('caches' in window) {
         ]);
     });
 }
-*/
+
