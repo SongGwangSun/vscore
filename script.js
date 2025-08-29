@@ -162,18 +162,17 @@ function updateScore(player, delta) {
 
     let currentServeChangeRule = isDeuce ? 1 : serveChangeRule;
 
+    let serveChanged = false; // 서브 교체 여부
+
     // 서브권 계산
-    // serveChangeRule마다 서브권 변경
     if (totalPoints === 0) {
         currentServer = 1; // 첫 서브는 1번 플레이어
     } else {
-        ServerChange = 0; // 서브 교체
-
         if (gameState.selectedGame == 'badminton') {
             if (currentServer != player && ServerCount == 1) {
                 ServerCount = 2; // 서브권이 바뀌었으므로 2로 변경
                 currentServer = player; // 서브권을 점수 올린 플레이어로 변경
-                ServerChange = 1; // 서브 교체
+                serveChanged = true;
             }
             else if (currentServer != player && ServerCount == 2) {
                 ServerCount = 1; // 서브권이 바뀌었으므로 1로 변경
@@ -182,14 +181,17 @@ function updateScore(player, delta) {
         }
         else if (gameState.selectedGame == 'pingpong') {
             let serveTurn = Math.floor(totalPoints / currentServeChangeRule) % 2;
-            currentServer = serveTurn === 0 ? 1 : 2;
-            ServerChange = 1; // 서브 교체
+            let newServer = serveTurn === 0 ? 1 : 2;
+            if (currentServer !== newServer) {
+                currentServer = newServer;
+                serveChanged = true;
+            }
         }
         else if (gameState.selectedGame == 'Jokgu') {
             if (currentServer != player) {
-                currentServer = player; // 서브권을 점수 올린 플레이어로 변경
-                currentServeChangeRule = 1; // 족구는 매 점수마다 서브 교체
-                ServerChange = 1; // 서브 교체
+                currentServer = player;
+                currentServeChangeRule = 1;
+                serveChanged = true;
             }
         }
     }
@@ -210,7 +212,8 @@ function updateScore(player, delta) {
         endSet(winner);
     }
     else {
-        if (totalPoints > 0 && totalPoints % currentServeChangeRule === 0 && ServerChange == 1) {
+        // serveChanged가 true면 서브 교체 알림
+        if (serveChanged) {
             showServeChangeAlert();
         }
     }
@@ -567,4 +570,5 @@ if ('caches' in window) {
         ]);
     });
 }
+
 
