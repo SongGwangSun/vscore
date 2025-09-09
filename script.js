@@ -119,11 +119,11 @@ function increaseScore(player) {
     const currentTime = new Date().getTime();
     const timeDiff = currentTime - gameState.lastTapTime;
 
-    if (timeDiff < gameState.doubleTapDelay) {
-        // 더블 탭 - 점수 감소
-        decreaseScore(player);
-        return;
-    }
+    // if (timeDiff < gameState.doubleTapDelay) {
+    //     // 더블 탭 - 점수 감소
+    //     decreaseScore(player);
+    //     return;
+    // }
 
     gameState.lastTapTime = currentTime;
 
@@ -570,5 +570,6 @@ if ('caches' in window) {
         ]);
     });
 }
+
 
 
