@@ -328,17 +328,43 @@ body.mobile {
 
 /* 하단 버튼이 점수 버튼을 가리지 않도록 */
 .control-buttons {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 10;
     display: flex;
-    justify-content: center;
     gap: 0.5rem;
-    padding: 0.5rem 0;
-    background: rgba(255,255,255,0.95);
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
+    justify-content: center;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    padding: 1rem;
+    flex-direction: row;
+    background: rgba(255, 255, 255, 0.95);
+    border-top: 1px solid #e9ecef;
+    height: 15vh;
+    align-items: center;
+}
+
+.control-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.5rem;
+    touch-action: manipulation;
+    flex: 1;
+    min-width: 60px;
+    max-width: 80px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.control-btn:hover, .control-btn:active {
+    background: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 /* 게임 종료 화면 */
@@ -1075,4 +1101,3 @@ body.android .end-btn {
 .modal-action:hover {
     background: #4752c4;
 }
-
