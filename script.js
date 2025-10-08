@@ -25,6 +25,7 @@ let totalPoints = 0;     // 두 선수 점수 합
 let currentServer = 1;  // 1번 또는 2번 플레이어가 서브권
 let ServerCount = 1;    // 배드민턴 서브 규칙 (처음만 1인 서브 교체)
 let ServerChange = 0;   // 서브 교체
+let lastAction = 'endSet';  // default last action
 
 // 게임 선택
 function selectGame(game) {
@@ -38,6 +39,8 @@ function selectGame(game) {
     };
     document.getElementById('selectedGameTitle').textContent = `${gameNames[game]} 게임 설정`;
     showScreen('gameSettings');
+
+    updateMatchTypeVisibility(game);
 }
 
 // 게임 시작
@@ -45,6 +48,7 @@ function startGame() {
     console.log('startGame called');
     const winScoreInput = document.querySelector('input[name="winScore"]:checked');
     const totalSetsInput = document.querySelector('input[name="totalSets"]:checked');
+    const matchTypeInput = document.querySelector('input[name="matchType"]:checked');
 
     if (!winScoreInput || !totalSetsInput) {
         alert('게임 설정을 선택해주세요.');
@@ -65,6 +69,8 @@ function startGame() {
     currentServer = 1;  // 1번 또는 2번 플레이어가 서브권
     ServerCount = 1;    // 배드민턴 서브 규칙 (처음만 1인 서브 교체)
     ServerChange = 0;   // 서브 교체
+
+    gameState.matchType = matchTypeInput ? matchTypeInput.value : 'single';
 
     updateScoreboard();
     showScreen('scoreboard');
@@ -109,9 +115,11 @@ function showScreen(screenId) {
 function updateScoreboard() {
     document.getElementById('score1').textContent = gameState.player1Score;
     document.getElementById('score2').textContent = gameState.player2Score;
-    document.getElementById('player1Sets').textContent = gameState.player1Sets;
-    document.getElementById('player2Sets').textContent = gameState.player2Sets;
-    document.getElementById('currentSetNumber').textContent = gameState.currentSet;
+    // document.getElementById('player1Sets').textContent = gameState.player1Sets;
+    // document.getElementById('player2Sets').textContent = gameState.player2Sets;
+    document.getElementById('player1SetsInline').textContent = gameState.player1Sets;
+    document.getElementById('player2SetsInline').textContent = gameState.player2Sets;
+    // document.getElementById('currentSetNumber').textContent = gameState.currentSet;
 }
 
 // 점수 증가
@@ -119,11 +127,11 @@ function increaseScore(player) {
     const currentTime = new Date().getTime();
     const timeDiff = currentTime - gameState.lastTapTime;
 
-    // if (timeDiff < gameState.doubleTapDelay) {
-    //     // 더블 탭 - 점수 감소
-    //     decreaseScore(player);
-    //     return;
-    // }
+    if (timeDiff < gameState.doubleTapDelay) {
+        // 더블 탭 - 점수 감소
+        // decreaseScore(player);
+        return;
+    }
 
     gameState.lastTapTime = currentTime;
 
@@ -141,6 +149,8 @@ function increaseScore(player) {
 
 // 점수 감소
 function decreaseScore(player) {
+        console.log('decreaseScore ', player);
+
     if (player === 1 && gameState.player1Score > 0) {
         updateScore(player, -1);
     } else if (player === 2 && gameState.player2Score > 0) {
@@ -149,13 +159,20 @@ function decreaseScore(player) {
 }
 
 function updateScore(player, delta) {
+    if( lastAction != 'endSet') return;
+    
+    console.log('updateScore lastAction : ', lastAction);
+
+    lastAction = 'updateScore';
+    
+    totalPoints = gameState.player1Score + gameState.player2Score;
+
     if (player === 1) {
         gameState.player1Score += delta;
     } else {
         gameState.player2Score += delta;
     }
-    totalPoints = gameState.player1Score + gameState.player2Score;
-
+    
     // 듀스 상황 체크
     let isDeuce = (gameState.player1Score >= gameState.winScore - 1 &&
         gameState.player2Score >= gameState.winScore - 1);
@@ -196,11 +213,18 @@ function updateScore(player, delta) {
         }
     }
 
+    // 경기 방식에 따라 서브 교체 룰 결정
+    let isSingle = gameState.matchType === 'single';
+    if (gameState.selectedGame == 'pingpong') {
+        serveChangeRule = isSingle ? 2 : 5; // 단식 2점, 복식 5점마다 서브 교체
+    } else if (gameState.selectedGame == 'badminton') {
+        serveChangeRule = isSingle ? 1 : 2; // 단식 1점, 복식 2점마다 서브 교체
+    }
+
     speakScore(`${gameState.player1Score} 대 ${gameState.player2Score}`);
 
     updateScoreboard();
     updateServeColor();
-
 
     const player1Wins = gameState.player1Score >= gameState.winScore &&
         (gameState.player1Score - gameState.player2Score) >= 2;
@@ -217,6 +241,7 @@ function updateScore(player, delta) {
             showServeChangeAlert();
         }
     }
+    lastAction = 'endSet';
 }
 
 function updateServeColor() {
@@ -357,6 +382,21 @@ function handlePlayerScore(player) {
     }
 
     gameState.lastTapTime = currentTime;
+}
+
+// 코트 전환
+function switchCourt() {
+    // 플레이어 점수, 세트, 이름 등 좌우 교체
+    // 예시: 점수와 세트만 교체
+    [gameState.player1Score, gameState.player2Score] = [gameState.player2Score, gameState.player1Score];
+    [gameState.player1Sets, gameState.player2Sets] = [gameState.player2Sets, gameState.player1Sets];
+    updateScoreboard();
+    speakScore('코트가 교체되었습니다.');
+}
+
+// 정보 보기
+function showAbout() {
+    alert('스포츠 점수판 v1.0\n제작: sun2soft \n문의: songgs33@gmail.com');
 }
 
 // 초기화 함수
@@ -500,6 +540,22 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // 모바일 볼륨 버튼으로 점수 올리기
+    window.addEventListener('keydown', function(e) {
+        // 볼륨 업: 'VolumeUp', 볼륨 다운: 'VolumeDown'
+        if (document.getElementById('scoreboard').classList.contains('active')) {
+            if (e.code === 'AudioVolumeUp' || e.key === 'VolumeUp') {
+                // Play1 점수 증가
+                increaseScore(1);
+                e.preventDefault();
+            } else if (e.code === 'AudioVolumeDown' || e.key === 'VolumeDown') {
+                // Play2 점수 증가
+                increaseScore(2);
+                e.preventDefault();
+            }
+        }
+    }, { passive: false });
+
     // 화면 방향 변경 감지
     window.addEventListener('orientationchange', function () {
         setTimeout(function () {
@@ -560,7 +616,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 // 오프라인 지원을 위한 캐시 (일시적으로 비활성화)
 if ('caches' in window) {
-    caches.open('scoreboard-v1').then(function (cache) {
+    caches.open('scoreboard').then(function (cache) {
         return cache.addAll([
             './',
             './index.html',
@@ -569,6 +625,15 @@ if ('caches' in window) {
             './manifest.json'
         ]);
     });
+}
+
+function updateMatchTypeVisibility(game) {
+    const matchTypeGroup = document.getElementById('matchTypeGroup');
+    if (game === 'pingpong' || game === 'badminton') {
+        matchTypeGroup.style.display = '';
+    } else {
+        matchTypeGroup.style.display = 'none';
+    }
 }
 
 
