@@ -392,6 +392,7 @@ function switchCourt() {
     [gameState.player1Sets, gameState.player2Sets] = [gameState.player2Sets, gameState.player1Sets];
     currentServer = currentServer === 1 ? 2 : 1;
     updateScoreboard();
+    updateServeColor();
     speakScore('코트가 교체되었습니다.');
 }
 
@@ -636,6 +637,7 @@ function updateMatchTypeVisibility(game) {
         matchTypeGroup.style.display = 'none';
     }
 }
+
 
 
 
