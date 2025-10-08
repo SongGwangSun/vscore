@@ -277,17 +277,19 @@ body.mobile {
     flex-direction: row;
     justify-content: stretch;
     align-items: stretch;
-    flex: 1;
+    flex: 1 1 0;
     gap: 0.5rem;
     padding: 0.5rem;
     min-height: 0;
-    height: 80vh; /* 높이 더 크게 */
+    min-width: 0;
+    height: 100vh;   /* 화면 전체 높이 사용 */
+    box-sizing: border-box;
 }
 
 .player-score {
     flex: 1 1 0;
     text-align: center;
-    padding: 2.5rem 0.5rem; /* 위아래 패딩 크게 */
+    padding: 0; /* 패딩 최소화 */
     background: #f8f9fa;
     border-radius: 20px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
@@ -300,67 +302,43 @@ body.mobile {
     align-items: center;
     min-width: 0;
     min-height: 0;
-    width: 50vw;
+    width: 0;      /* flex로만 크기 결정 */
     height: 100%;
-    font-size: 2.2rem; /* 전체 폰트 크기 증가 */
+    font-size: 2.5vw; /* 상대적으로 크게 */
 }
 
-.player-name {
-    font-size: clamp(2rem, 6vw, 3rem);
-    font-weight: bold;
-    margin-bottom: 1.2rem;
+@media (orientation: portrait) {
+    .scoreboard-container {
+        flex-direction: row;
+        height: calc(100vh - 0.5rem);
+    }
+    .player-score {
+        font-size: 7vw;
+    }
+}
+@media (orientation: landscape) {
+    .scoreboard-container {
+        flex-direction: row;
+        height: 100vh;
+    }
+    .player-score {
+        font-size: 4vw;
+    }
 }
 
-.score-display {
-    font-size: clamp(4rem, 12vw, 7rem);
-    font-weight: bold;
-    margin-bottom: 0.8rem;
-}
-
-.touch-hint {
-    font-size: 1.2rem;
-    margin-top: 0.5rem;
-    opacity: 0.7;
-}
-
+/* 하단 버튼이 점수 버튼을 가리지 않도록 */
 .control-buttons {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
     display: flex;
+    justify-content: center;
     gap: 0.5rem;
-    justify-content: center;
-    flex-wrap: nowrap;
-    flex-shrink: 0;
-    padding: 1rem;
-    flex-direction: row;
-    background: rgba(255, 255, 255, 0.95);
-    border-top: 1px solid #e9ecef;
-    height: 15vh;
-    align-items: center;
-}
-
-.control-btn {
-    background: #6c757d;
-    color: white;
-    border: none;
-    padding: 1rem;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 1.5rem;
-    touch-action: manipulation;
-    flex: 1;
-    min-width: 60px;
-    max-width: 80px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-
-.control-btn:hover, .control-btn:active {
-    background: #5a6268;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    padding: 0.5rem 0;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
 }
 
 /* 게임 종료 화면 */
