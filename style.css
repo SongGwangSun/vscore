@@ -242,7 +242,7 @@ body.mobile {
     100% { opacity: 0; }
 }
 /* ...existing code... */
-.sets-display {
+/* .sets-display {
     text-align: center;
     padding: 1rem;
     background: linear-gradient(45deg, #667eea, #764ba2);
@@ -260,7 +260,7 @@ body.mobile {
     font-size: clamp(2rem, 8vw, 4rem);
     font-weight: bold;
     margin-bottom: 0.25rem;
-}
+} */
 
 .separator {
     margin: 0 1rem;
@@ -274,89 +274,53 @@ body.mobile {
 
 .scoreboard-container {
     display: flex;
-    justify-content: space-between;
+    flex-direction: row;
+    justify-content: stretch;
     align-items: stretch;
     flex: 1;
     gap: 0.5rem;
     padding: 0.5rem;
     min-height: 0;
-    height: 70vh;
+    height: 80vh; /* 높이 더 크게 */
 }
 
 .player-score {
-    flex: 1;
+    flex: 1 1 0;
     text-align: center;
-    padding: 1rem;
+    padding: 2.5rem 0.5rem; /* 위아래 패딩 크게 */
     background: #f8f9fa;
     border-radius: 20px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     transition: background 0.2s ease, box-shadow 0.2s ease;
     cursor: pointer;
     user-select: none;
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: 0;
-    width: 50%;
-    height: 100%;
+    align-items: center;
     min-width: 0;
-}
-
-.player-score:active {
-    /* 레이아웃 흔들림 방지를 위해 축소 효과 제거 */
-    transform: none;
-    background: #e9ecef;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    min-height: 0;
+    width: 50vw;
+    height: 100%;
+    font-size: 2.2rem; /* 전체 폰트 크기 증가 */
 }
 
 .player-name {
-    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    font-size: clamp(2rem, 6vw, 3rem);
     font-weight: bold;
-    color: #333;
-    margin-bottom: 1rem;
-    flex-shrink: 0;
+    margin-bottom: 1.2rem;
 }
 
-/* 점수 숫자 고정폭과 최소 폭 예약으로 자릿수 증가 시 레이아웃 고정 */
 .score-display {
-    font-size: clamp(6rem, 25vw, 20rem);
+    font-size: clamp(4rem, 12vw, 7rem);
     font-weight: bold;
-    color: #667eea;
-    margin: 0.5rem 0;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-    line-height: 1;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-    font-feature-settings: 'tnum' 1, 'lnum' 1;
-    min-width: 3ch; /* 두 자리 이상을 위해 최소 폭 예약 */
-    box-sizing: border-box;
+    margin-bottom: 0.8rem;
 }
 
 .touch-hint {
-    font-size: clamp(0.8rem, 2.5vw, 1rem);
-    color: #666;
+    font-size: 1.2rem;
     margin-top: 0.5rem;
-    flex-shrink: 0;
-}
-
-.vs-divider {
-    font-size: clamp(1.5rem, 5vw, 2rem);
-    font-weight: bold;
-    color: #333;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    opacity: 0.7;
 }
 
 .control-buttons {
@@ -996,7 +960,7 @@ body.android .end-btn {
 	}
 
 	/* 상단 좌측: 세트 점수 */
-	.sets-display {
+	/* .sets-display {
 		grid-row: 1;
 		grid-column: 1;
 		height: auto;
@@ -1006,7 +970,7 @@ body.android .end-btn {
 		flex-direction: column;
 		justify-content: center;
 		align-items: flex-start;
-	}
+	} */
 
 	/* 상단 우측: 컨트롤 아이콘 3개 */
 	.control-buttons {
@@ -1065,5 +1029,72 @@ body.android .end-btn {
 
 	/* VS는 가로모드에서 숨김 */
 	.vs-divider { display: none; }
+}
+
+.player-set-score {
+    font-size: 1.1em;
+    color: #667eea;
+    margin-top: 8px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* ...existing code... */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0; top: 0; width: 100vw; height: 100vh;
+    background: rgba(30, 41, 59, 0.45);
+    justify-content: center;
+    align-items: center;
+    transition: background 0.2s;
+}
+.modal.active {
+    display: flex;
+}
+.modal-content {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(30,41,59,0.18);
+    padding: 2.2rem 1.5rem 1.2rem 1.5rem;
+    max-width: 350px;
+    width: 90vw;
+    text-align: center;
+    position: relative;
+    animation: modalFadeIn 0.25s;
+}
+@keyframes modalFadeIn {
+    from { transform: translateY(40px) scale(0.98); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+.modal-close {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.7rem;
+    color: #667eea;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.modal-close:hover {
+    color: #374151;
+}
+.modal-footer {
+    margin-top: 1.5rem;
+}
+.modal-action {
+    background: #667eea;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6em 1.5em;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.modal-action:hover {
+    background: #4752c4;
 }
 
