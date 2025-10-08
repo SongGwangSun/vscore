@@ -594,7 +594,7 @@ body.mobile {
 }
 
 /* 가로 모드에서의 최적화 */
-@media (orientation: landscape) and (max-height: 500px) {
+@media (orientation: landscape) and (max-height: 600px) {
     #scoreboard {
         flex-direction: row;
         align-items: center;
@@ -1101,3 +1101,4 @@ body.android .end-btn {
 .modal-action:hover {
     background: #4752c4;
 }
+
