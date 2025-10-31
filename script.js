@@ -19,7 +19,7 @@ let gameState = {
 let speechSynthesis = window.speechSynthesis;
 let speechUtterance = null;
 
-// 서브 체인지 알림 (탁구/배드민턴)
+// 서브 체인지 알림 (탁구/배드민턴/피클볼)
 let serveChangeRule = 2; // 예: 2점마다 서브 교체 (게임 설정에서 받아옴)
 let totalPoints = 0;     // 두 선수 점수 합
 let currentServer = 1;  // 1번 또는 2번 플레이어가 서브권
@@ -32,6 +32,7 @@ function selectGame(game) {
     console.log('selectGame called with:', game);
     gameState.selectedGame = game;
     const gameNames = {
+        'pickleball': '피클볼',
         'pingpong': '탁구',
         'badminton': '배드민턴',
         'Jokgu': '족구'
@@ -69,7 +70,9 @@ function startGame() {
     currentServer = 1;  // 1번 또는 2번 플레이어가 서브권
     ServerCount = 1;    // 배드민턴 서브 규칙 (처음만 1인 서브 교체)
     ServerChange = 0;   // 서브 교체
-
+    lastAction = 'endSet';  // default last action
+    lastActionTime = new Date().getTime();
+    
     gameState.matchType = matchTypeInput ? matchTypeInput.value : 'single';
 
     updateScoreboard();
@@ -185,7 +188,7 @@ function updateScore(player, delta) {
     if (totalPoints === 0) {
         currentServer = 1; // 첫 서브는 1번 플레이어
     } else {
-        if (gameState.selectedGame == 'badminton') {
+        if (gameState.selectedGame == 'badminton' || gameState.selectedGame == 'pickleball') {
             if (currentServer != player && ServerCount == 1) {
                 ServerCount = 2; // 서브권이 바뀌었으므로 2로 변경
                 currentServer = player; // 서브권을 점수 올린 플레이어로 변경
@@ -217,10 +220,27 @@ function updateScore(player, delta) {
     let isSingle = gameState.matchType === 'single';
     if (gameState.selectedGame == 'pingpong') {
         serveChangeRule = isSingle ? 2 : 5; // 단식 2점, 복식 5점마다 서브 교체
-    } else if (gameState.selectedGame == 'badminton') {
+    } else if (gameState.selectedGame == 'badminton' || gameState.selectedGame == 'pickleball') {
         serveChangeRule = isSingle ? 1 : 2; // 단식 1점, 복식 2점마다 서브 교체
     }
 
+    if(gameState.player1Score == 10 || gameState.player2Score == 10) {
+        if(gameState.player1Score == 10 && gameState.player2Score != 10)
+            speakScore(`십 대 ${gameState.player2Score}`);
+        else if(gameState.player1Score != 10 && gameState.player2Score == 10)
+            speakScore(`${gameState.player1Score} 대 십`);
+        else if(gameState.player1Score == 10 && gameState.player2Score == 10)
+            speakScore(`십 대 십`);
+    }
+    // else if(gameState.player1Score == 15 || gameState.player2Score == 15) {
+    //     gameState.player1Score = 0;
+    //     gameState.player2Score = 0;
+    // }
+    // else if(gameState.player1Score == 20 || gameState.player2Score == 20) {
+    //     gameState.player1Score = 0;
+    //     gameState.player2Score = 0;
+    // }
+    else
     speakScore(`${gameState.player1Score} 대 ${gameState.player2Score}`);
 
     updateScoreboard();
@@ -390,9 +410,7 @@ function switchCourt() {
     // 예시: 점수와 세트만 교체
     [gameState.player1Score, gameState.player2Score] = [gameState.player2Score, gameState.player1Score];
     [gameState.player1Sets, gameState.player2Sets] = [gameState.player2Sets, gameState.player1Sets];
-    currentServer = currentServer === 1 ? 2 : 1;
     updateScoreboard();
-    updateServeColor();
     speakScore('코트가 교체되었습니다.');
 }
 
@@ -637,8 +655,6 @@ function updateMatchTypeVisibility(game) {
         matchTypeGroup.style.display = 'none';
     }
 }
-
-
 
 
 
