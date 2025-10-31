@@ -21,6 +21,10 @@
     <div id="gameSelection" class="screen">
         <h1>스포츠 점수판</h1>
         <div class="game-buttons">
+            <button class="game-btn" onclick="selectGame('pickleball')" type="button">
+                <div class="game-icon">🎾</div>
+                <div class="game-name">피클볼</div>
+            </button>
             <button class="game-btn" onclick="selectGame('pingpong')" type="button">
                 <div class="game-icon">🏓</div>
                 <div class="game-name">탁구</div>
@@ -45,6 +49,8 @@
                 <div class="radio-group">
                     <input type="radio" id="score11" name="winScore" value="11" checked>
                     <label for="score11">11점</label>
+                    <input type="radio" id="score11" name="winScore" value="15" checked>
+                    <label for="score11">15점</label>
                     <input type="radio" id="score21" name="winScore" value="21">
                     <label for="score21">21점</label>
                 </div>
@@ -86,8 +92,9 @@
         <!-- 메인 점수판 -->
         <div class="scoreboard-container">
             <div class="player-score" id="player1Score" role="button" tabindex="0" aria-label="플레이어 1 점수 증가">
-                <div class="player-name">플레이어 1 - <span id="player1SetsInline">0</span></div>
-                <div class="score-display" id="score1">0<br><br><br></div>
+                <div class="player-name"><br><br>플레이어 1 - <span id="player1SetsInline">0</span></div>
+                <div class="score-display" id="score1">0<br><br></div>
+                <br><br><br>
                 <!-- <div class="player-set-score">
                     <span id="player1SetsInline">0</span>
                 </div> -->
@@ -105,7 +112,7 @@
 
             <div class="player-score" id="player2Score" role="button" tabindex="0" aria-label="플레이어 2 점수 증가">
                 <div class="player-name">플레이어 2 - <span id="player2SetsInline">0</span></div>
-                <div class="score-display" id="score2">0<br><br><br></div>
+                <div class="score-display" id="score2">0</div>
                 <!-- <div class="player-set-score">
                     <span id="player2SetsInline">0</span>
                 </div> -->
@@ -146,5 +153,3 @@
 </body>
 
 </html>
-
-
