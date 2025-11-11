@@ -1,5 +1,6 @@
 // 게임 상태 관리
 let gameState = {
+    state: '',
     selectedGame: '',
     winScore: 11,
     totalSets: 3,
@@ -46,21 +47,14 @@ function selectGame(game) {
 // 게임 시작
 function startGame() {
     console.log('startGame called');
-    
+
     const winScoreRange = document.getElementById('winScoreRange');
     gameState.winScore = winScoreRange ? parseInt(winScoreRange.value, 10) : 11;
 
-    // const winScoreInput = document.querySelector('input[name="winScore"]:checked');
     const totalSetsInput = document.querySelector('input[name="totalSets"]:checked');
     const matchTypeInput = document.querySelector('input[name="matchType"]:checked');
 
-    // if (!winScoreInput || !totalSetsInput) {
-    //     alert('게임 설정을 선택해주세요.');
-    //     return;
-    // }
-
-    // gameState.winScore = parseInt(winScoreInput.value);
-        if (!winScoreRange || !totalSetsInput) {
+    if (!winScoreRange || !totalSetsInput) {
         alert('게임 설정을 선택해주세요.');
         return;
     }
@@ -80,7 +74,7 @@ function startGame() {
     ServerChange = 0;   // 서브 교체
     lastAction = 'endSet';  // default last action
     lastActionTime = new Date().getTime();
-    
+
     gameState.matchType = matchTypeInput ? matchTypeInput.value : 'single';
 
     // 경기 방식에 따라 서브 교체 룰 결정
@@ -94,6 +88,7 @@ function startGame() {
     updateScoreboard();
     showScreen('scoreboard');
 
+    gameState.state = 'inGame';
     // 게임 시작 안내
     speakScore('게임 시작!');
 }
@@ -140,6 +135,8 @@ function updateScoreboard() {
 
 // 점수 증가
 function increaseScore(player) {
+
+    if (gameState.state != 'inGame') return;
     const currentTime = new Date().getTime();
     const timeDiff = currentTime - gameState.lastTapTime;
 
@@ -159,12 +156,12 @@ function increaseScore(player) {
 
 
 function updateScore(player, delta) {
-    if( lastAction != 'endSet') return;
-    
+    if (lastAction != 'endSet') return;
+
     console.log('updateScore lastAction : ', lastAction);
 
     lastAction = 'updateScore';
-    
+
     totalPoints = gameState.player1Score + gameState.player2Score;
 
     let player1ScoreBefore = gameState.player1Score;
@@ -175,7 +172,7 @@ function updateScore(player, delta) {
     } else {
         player2ScoreBefore += delta;
     }
-    
+
     // 듀스 상황 체크
     let isDeuce = (player1ScoreBefore >= gameState.winScore - 1 &&
         player2ScoreBefore >= gameState.winScore - 1);
@@ -216,12 +213,12 @@ function updateScore(player, delta) {
         }
     }
 
-    if(player1ScoreBefore == 10 || player2ScoreBefore == 10) {
-        if(player1ScoreBefore == 10 && player2ScoreBefore != 10)
+    if (player1ScoreBefore == 10 || player2ScoreBefore == 10) {
+        if (player1ScoreBefore == 10 && player2ScoreBefore != 10)
             speakScore(`십 대 ${player2ScoreBefore}`);
-        else if(player1ScoreBefore != 10 && player2ScoreBefore == 10)
+        else if (player1ScoreBefore != 10 && player2ScoreBefore == 10)
             speakScore(`${player1ScoreBefore} 대 십`);
-        else if(player1ScoreBefore == 10 && player2ScoreBefore == 10)
+        else if (player1ScoreBefore == 10 && player2ScoreBefore == 10)
             speakScore(`십 대 십`);
     }
     else
@@ -282,6 +279,7 @@ function checkSetEnd() {
 
 // 세트 종료
 function endSet(winner) {
+    gameState.state = 'setEnd';
     if (winner === 1) {
         gameState.player1Sets++;
         speakScore('플레이어 1 세트 승리!');
@@ -302,6 +300,8 @@ function endSet(winner) {
             gameState.currentSet++;
             gameState.player1Score = 0;
             gameState.player2Score = 0;
+            gameState.state = 'inGame';
+
             updateScoreboard();
             speakScore(`${gameState.currentSet}세트 시작! 0 대 0`);
         }, 2000);
@@ -381,8 +381,8 @@ function handlePlayerScore(player) {
     const currentTime = new Date().getTime();
     const timeDiff = currentTime - gameState.lastTapTime;
 
-        // 단일 탭 - 점수 증가
-        increaseScore(player);
+    // 단일 탭 - 점수 증가
+    increaseScore(player);
 
     gameState.lastTapTime = currentTime;
 }
@@ -421,7 +421,7 @@ function initializeApp() {
         console.error('gameSelection screen not found!');
     }
 
-       // ...existing code...
+    // ...existing code...
     const winScoreRange = document.getElementById('winScoreRange');
     const winScoreValue = document.getElementById('winScoreValue');
     if (winScoreRange && winScoreValue) {
@@ -554,7 +554,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // 모바일 볼륨 버튼으로 점수 올리기
-    window.addEventListener('keydown', function(e) {
+    window.addEventListener('keydown', function (e) {
         // 볼륨 업: 'VolumeUp', 볼륨 다운: 'VolumeDown'
         if (document.getElementById('scoreboard').classList.contains('active')) {
             if (e.code === 'AudioVolumeUp' || e.key === 'VolumeUp') {
