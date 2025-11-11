@@ -10,7 +10,6 @@ let gameState = {
     player2Sets: 0,
     scoreHistory: [],
     lastTapTime: 0,
-    doubleTapDelay: 300,
     touchStartTime: 0,
     touchEndTime: 0
 };
@@ -19,18 +18,20 @@ let gameState = {
 let speechSynthesis = window.speechSynthesis;
 let speechUtterance = null;
 
-// 서브 체인지 알림 (탁구/배드민턴)
+// 서브 체인지 알림 (탁구/배드민턴/피클볼)
 let serveChangeRule = 2; // 예: 2점마다 서브 교체 (게임 설정에서 받아옴)
 let totalPoints = 0;     // 두 선수 점수 합
 let currentServer = 1;  // 1번 또는 2번 플레이어가 서브권
 let ServerCount = 1;    // 배드민턴 서브 규칙 (처음만 1인 서브 교체)
 let ServerChange = 0;   // 서브 교체
+let lastAction = 'endSet';  // default last action
 
 // 게임 선택
 function selectGame(game) {
     console.log('selectGame called with:', game);
     gameState.selectedGame = game;
     const gameNames = {
+        'pickleball': '피클볼',
         'pingpong': '탁구',
         'badminton': '배드민턴',
         'Jokgu': '족구'
@@ -38,20 +39,32 @@ function selectGame(game) {
     };
     document.getElementById('selectedGameTitle').textContent = `${gameNames[game]} 게임 설정`;
     showScreen('gameSettings');
+
+    updateMatchTypeVisibility(game);
 }
 
 // 게임 시작
 function startGame() {
     console.log('startGame called');
-    const winScoreInput = document.querySelector('input[name="winScore"]:checked');
-    const totalSetsInput = document.querySelector('input[name="totalSets"]:checked');
+    
+    const winScoreRange = document.getElementById('winScoreRange');
+    gameState.winScore = winScoreRange ? parseInt(winScoreRange.value, 10) : 11;
 
-    if (!winScoreInput || !totalSetsInput) {
+    // const winScoreInput = document.querySelector('input[name="winScore"]:checked');
+    const totalSetsInput = document.querySelector('input[name="totalSets"]:checked');
+    const matchTypeInput = document.querySelector('input[name="matchType"]:checked');
+
+    // if (!winScoreInput || !totalSetsInput) {
+    //     alert('게임 설정을 선택해주세요.');
+    //     return;
+    // }
+
+    // gameState.winScore = parseInt(winScoreInput.value);
+        if (!winScoreRange || !totalSetsInput) {
         alert('게임 설정을 선택해주세요.');
         return;
     }
 
-    gameState.winScore = parseInt(winScoreInput.value);
     gameState.totalSets = parseInt(totalSetsInput.value);
     gameState.currentSet = 1;
     gameState.player1Score = 0;
@@ -65,6 +78,18 @@ function startGame() {
     currentServer = 1;  // 1번 또는 2번 플레이어가 서브권
     ServerCount = 1;    // 배드민턴 서브 규칙 (처음만 1인 서브 교체)
     ServerChange = 0;   // 서브 교체
+    lastAction = 'endSet';  // default last action
+    lastActionTime = new Date().getTime();
+    
+    gameState.matchType = matchTypeInput ? matchTypeInput.value : 'single';
+
+    // 경기 방식에 따라 서브 교체 룰 결정
+    let isSingle = gameState.matchType === 'single';
+    if (gameState.selectedGame == 'pingpong') {
+        serveChangeRule = isSingle ? 2 : 5; // 단식 2점, 복식 5점마다 서브 교체
+    } else if (gameState.selectedGame == 'badminton' || gameState.selectedGame == 'pickleball') {
+        serveChangeRule = isSingle ? 1 : 2; // 단식 1점, 복식 2점마다 서브 교체
+    }
 
     updateScoreboard();
     showScreen('scoreboard');
@@ -109,21 +134,14 @@ function showScreen(screenId) {
 function updateScoreboard() {
     document.getElementById('score1').textContent = gameState.player1Score;
     document.getElementById('score2').textContent = gameState.player2Score;
-    document.getElementById('player1Sets').textContent = gameState.player1Sets;
-    document.getElementById('player2Sets').textContent = gameState.player2Sets;
-    document.getElementById('currentSetNumber').textContent = gameState.currentSet;
+    document.getElementById('player1SetsInline').textContent = gameState.player1Sets;
+    document.getElementById('player2SetsInline').textContent = gameState.player2Sets;
 }
 
 // 점수 증가
 function increaseScore(player) {
     const currentTime = new Date().getTime();
     const timeDiff = currentTime - gameState.lastTapTime;
-
-    // if (timeDiff < gameState.doubleTapDelay) {
-    //     // 더블 탭 - 점수 감소
-    //     decreaseScore(player);
-    //     return;
-    // }
 
     gameState.lastTapTime = currentTime;
 
@@ -139,26 +157,28 @@ function increaseScore(player) {
     updateScore(player, 1);
 }
 
-// 점수 감소
-function decreaseScore(player) {
-    if (player === 1 && gameState.player1Score > 0) {
-        updateScore(player, -1);
-    } else if (player === 2 && gameState.player2Score > 0) {
-        updateScore(player, -1);
-    }
-}
 
 function updateScore(player, delta) {
-    if (player === 1) {
-        gameState.player1Score += delta;
-    } else {
-        gameState.player2Score += delta;
-    }
+    if( lastAction != 'endSet') return;
+    
+    console.log('updateScore lastAction : ', lastAction);
+
+    lastAction = 'updateScore';
+    
     totalPoints = gameState.player1Score + gameState.player2Score;
 
+    let player1ScoreBefore = gameState.player1Score;
+    let player2ScoreBefore = gameState.player2Score;
+
+    if (player === 1) {
+        player1ScoreBefore += delta;
+    } else {
+        player2ScoreBefore += delta;
+    }
+    
     // 듀스 상황 체크
-    let isDeuce = (gameState.player1Score >= gameState.winScore - 1 &&
-        gameState.player2Score >= gameState.winScore - 1);
+    let isDeuce = (player1ScoreBefore >= gameState.winScore - 1 &&
+        player2ScoreBefore >= gameState.winScore - 1);
 
     let currentServeChangeRule = isDeuce ? 1 : serveChangeRule;
 
@@ -168,7 +188,7 @@ function updateScore(player, delta) {
     if (totalPoints === 0) {
         currentServer = 1; // 첫 서브는 1번 플레이어
     } else {
-        if (gameState.selectedGame == 'badminton') {
+        if (gameState.selectedGame == 'badminton' || gameState.selectedGame == 'pickleball') {
             if (currentServer != player && ServerCount == 1) {
                 ServerCount = 2; // 서브권이 바뀌었으므로 2로 변경
                 currentServer = player; // 서브권을 점수 올린 플레이어로 변경
@@ -196,27 +216,40 @@ function updateScore(player, delta) {
         }
     }
 
-    speakScore(`${gameState.player1Score} 대 ${gameState.player2Score}`);
+    if(player1ScoreBefore == 10 || player2ScoreBefore == 10) {
+        if(player1ScoreBefore == 10 && player2ScoreBefore != 10)
+            speakScore(`십 대 ${player2ScoreBefore}`);
+        else if(player1ScoreBefore != 10 && player2ScoreBefore == 10)
+            speakScore(`${player1ScoreBefore} 대 십`);
+        else if(player1ScoreBefore == 10 && player2ScoreBefore == 10)
+            speakScore(`십 대 십`);
+    }
+    else
+        speakScore(`${player1ScoreBefore} 대 ${player2ScoreBefore}`);
 
+    gameState.player1Score = player1ScoreBefore;
+    gameState.player2Score = player2ScoreBefore;
     updateScoreboard();
-    updateServeColor();
 
-
-    const player1Wins = gameState.player1Score >= gameState.winScore &&
-        (gameState.player1Score - gameState.player2Score) >= 2;
-    const player2Wins = gameState.player2Score >= gameState.winScore &&
-        (gameState.player2Score - gameState.player1Score) >= 2;
+    const player1Wins = player1ScoreBefore >= gameState.winScore &&
+        (player1ScoreBefore - player2ScoreBefore) >= 2;
+    const player2Wins = player2ScoreBefore >= gameState.winScore &&
+        (player2ScoreBefore - player1ScoreBefore) >= 2;
 
     if (player1Wins || player2Wins) {
         const winner = player1Wins ? 1 : 2;
         endSet(winner);
     }
     else {
+
         // serveChanged가 true면 서브 교체 알림
         if (serveChanged) {
             showServeChangeAlert();
         }
+        updateServeColor();
     }
+    lastAction = 'endSet';
+    console.log('updateScore exit lastAction : ', lastAction);
 }
 
 function updateServeColor() {
@@ -348,15 +381,25 @@ function handlePlayerScore(player) {
     const currentTime = new Date().getTime();
     const timeDiff = currentTime - gameState.lastTapTime;
 
-    if (timeDiff < gameState.doubleTapDelay) {
-        // 더블 탭 - 점수 감소
-        decreaseScore(player);
-    } else {
         // 단일 탭 - 점수 증가
         increaseScore(player);
-    }
 
     gameState.lastTapTime = currentTime;
+}
+
+// 코트 전환
+function switchCourt() {
+    // 플레이어 점수, 세트, 이름 등 좌우 교체
+    // 예시: 점수와 세트만 교체
+    [gameState.player1Score, gameState.player2Score] = [gameState.player2Score, gameState.player1Score];
+    [gameState.player1Sets, gameState.player2Sets] = [gameState.player2Sets, gameState.player1Sets];
+    updateScoreboard();
+    speakScore('코트가 교체되었습니다.');
+}
+
+// 정보 보기
+function showAbout() {
+    alert('스포츠 점수판 v1.0\n제작: sun2soft \n문의: songgs33@gmail.com');
 }
 
 // 초기화 함수
@@ -377,6 +420,15 @@ function initializeApp() {
     } else {
         console.error('gameSelection screen not found!');
     }
+
+       // ...existing code...
+    const winScoreRange = document.getElementById('winScoreRange');
+    const winScoreValue = document.getElementById('winScoreValue');
+    if (winScoreRange && winScoreValue) {
+        winScoreRange.value = gameState.winScore || 11;
+        winScoreValue.textContent = winScoreRange.value;
+    }
+    // ...existing code...
 
     // 게임 상태 초기화
     gameState.selectedGame = '';
@@ -471,12 +523,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }, { passive: false });
 
     // 더블 탭 줌 방지
-    document.addEventListener('touchend', function (e) {
-        const now = (new Date()).getTime();
-        if (now - gameState.lastTapTime <= 300) {
-            e.preventDefault();
-        }
-    }, { passive: false });
+    // document.addEventListener('touchend', function (e) {
+    //     const now = (new Date()).getTime();
+    //     if (now - gameState.lastTapTime <= 300) {
+    //         e.preventDefault();
+    //     }
+    // }, { passive: false });
+
 
     // 키보드 단축키
     document.addEventListener('keydown', function (e) {
@@ -499,6 +552,22 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     });
+
+    // 모바일 볼륨 버튼으로 점수 올리기
+    window.addEventListener('keydown', function(e) {
+        // 볼륨 업: 'VolumeUp', 볼륨 다운: 'VolumeDown'
+        if (document.getElementById('scoreboard').classList.contains('active')) {
+            if (e.code === 'AudioVolumeUp' || e.key === 'VolumeUp') {
+                // Play1 점수 증가
+                increaseScore(1);
+                e.preventDefault();
+            } else if (e.code === 'AudioVolumeDown' || e.key === 'VolumeDown') {
+                // Play2 점수 증가
+                increaseScore(2);
+                e.preventDefault();
+            }
+        }
+    }, { passive: false });
 
     // 화면 방향 변경 감지
     window.addEventListener('orientationchange', function () {
@@ -560,7 +629,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 // 오프라인 지원을 위한 캐시 (일시적으로 비활성화)
 if ('caches' in window) {
-    caches.open('scoreboard-v1').then(function (cache) {
+    caches.open('scoreboard').then(function (cache) {
         return cache.addAll([
             './',
             './index.html',
@@ -569,6 +638,15 @@ if ('caches' in window) {
             './manifest.json'
         ]);
     });
+}
+
+function updateMatchTypeVisibility(game) {
+    const matchTypeGroup = document.getElementById('matchTypeGroup');
+    if (game === 'pingpong' || game === 'badminton') {
+        matchTypeGroup.style.display = '';
+    } else {
+        matchTypeGroup.style.display = 'none';
+    }
 }
 
 
