@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="ko">
 
+
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>스포츠 점수판</title>
@@ -15,6 +18,7 @@
     <meta name="apple-touch-fullscreen" content="yes">
     <meta name="apple-mobile-web-app-orientations" content="portrait">
 </head>
+
 
 <body>
     <!-- 게임 선택 화면 -->
@@ -80,57 +84,25 @@
                     <label for="double">복식</label>
                 </div>
             </div>
+
             <button class="start-btn" onclick="startGame()" type="button">게임 시작</button>
         </div>
     </div>
 
     <!-- 점수판 화면 -->
     <div id="scoreboard" class="screen">
-        <!-- 상단 세트 점수 -->
-        <!-- <div class="sets-display">
-            <div class="set-scores">
-                <span id="player1Sets">0</span>
-                <span class="separator">-</span>
-                <span id="player2Sets">0</span>
-                <div class="current-set">세트 <span id="currentSetNumber">1</span></div>
-            </div>
-        </div> -->
-
         <!-- 메인 점수판 -->
         <div class="scoreboard-container">
             <div class="player-score" id="player1Score" role="button" tabindex="0" aria-label="플레이어 1 점수 증가">
-                <div class="player-name"><br><br>플레이어 1 - <span id="player1SetsInline">0</span></div>
+                <div class="player-name">플레이어 1 - <span id="player1SetsInline">0</span></div>
                 <div class="score-display" id="score1">0<br><br></div>
-                <br><br><br>
-                <!-- <div class="player-set-score">
-                    <span id="player1SetsInline">0</span>
-                </div> -->
-                <!-- <div class="touch-hint">터치: +1</div> -->
-            </div>
-            <!-- <div class="vs-divider">VS</div> -->
-            <!-- 하단 버튼들 -->
-            <div class="control-buttons">
-                <button class="control-btn" onclick="showGameSelection()" type="button" title="새 게임">🏠</button>
-                <button class="control-btn" onclick="resetSet()" type="button" title="세트 리셋">🔄</button>
-                <button class="control-btn" onclick="undoLastScore()" type="button" title="실수 수정">↩️</button>
-                <button class="control-btn" onclick="switchCourt()" type="button" title="코트 교체">🔃</button>
-                <button class="control-btn" onclick="showAbout()" type="button" title="About">ℹ️</button>
-            </div>
-
-            <div class="player-score" id="player2Score" role="button" tabindex="0" aria-label="플레이어 2 점수 증가">
+                <div class="player-score" id="player2Score" role="button" tabindex="0" aria-label="플레이어 2 점수 증가">
                 <div class="player-name">플레이어 2 - <span id="player2SetsInline">0</span></div>
                 <div class="score-display" id="score2">0</div>
-                <!-- <div class="player-set-score">
-                    <span id="player2SetsInline">0</span>
-                </div> -->
-                <!-- <div class="touch-hint">터치: +1</div> -->
             </div>
         </div>
 
     </div>
-
-    <!-- 게임 종료 화면 -->
-    <div id="gameEnd" class="screen">
         <h2>게임 종료!</h2>
         <div class="winner-display">
             <div class="winner-text" id="winnerText">승자: 플레이어 1</div>
@@ -158,5 +130,6 @@
 
     <script src="script.js"></script>
 </body>
+
 
 </html>

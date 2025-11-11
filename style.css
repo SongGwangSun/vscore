@@ -242,7 +242,7 @@ body.mobile {
     100% { opacity: 0; }
 }
 /* ...existing code... */
-/* .sets-display {
+/* /* .sets-display {
     text-align: center;
     padding: 1rem;
     background: linear-gradient(45deg, #667eea, #764ba2);
@@ -594,7 +594,7 @@ body.mobile {
 }
 
 /* 가로 모드에서의 최적화 */
-@media (orientation: landscape) and (max-height: 500px) {
+@media (orientation: landscape) and (max-height: 600px) {
     #scoreboard {
         flex-direction: row;
         align-items: center;
@@ -1033,6 +1033,73 @@ body.android .end-btn {
 
 	/* VS는 가로모드에서 숨김 */
 	.vs-divider { display: none; }
+}
+
+.player-set-score {
+    font-size: 1.1em;
+    color: #667eea;
+    margin-top: 8px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* ...existing code... */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0; top: 0; width: 100vw; height: 100vh;
+    background: rgba(30, 41, 59, 0.45);
+    justify-content: center;
+    align-items: center;
+    transition: background 0.2s;
+}
+.modal.active {
+    display: flex;
+}
+.modal-content {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(30,41,59,0.18);
+    padding: 2.2rem 1.5rem 1.2rem 1.5rem;
+    max-width: 350px;
+    width: 90vw;
+    text-align: center;
+    position: relative;
+    animation: modalFadeIn 0.25s;
+}
+@keyframes modalFadeIn {
+    from { transform: translateY(40px) scale(0.98); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+.modal-close {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.7rem;
+    color: #667eea;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.modal-close:hover {
+    color: #374151;
+}
+.modal-footer {
+    margin-top: 1.5rem;
+}
+.modal-action {
+    background: #667eea;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6em 1.5em;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.modal-action:hover {
+    background: #4752c4;
 }
 
 .player-set-score {
