@@ -18,6 +18,26 @@ let gameState = {
 // 음성 합성 초기화
 let speechSynthesis = window.speechSynthesis;
 let speechUtterance = null;
+// 캐시된 음성 목록
+let voicesList = [];
+
+function loadVoices() {
+    voicesList = speechSynthesis.getVoices() || [];
+    // 일부 브라우저는 voices가 비동기 로드되므로 이벤트로 재시도
+    if (voicesList.length === 0) {
+        speechSynthesis.addEventListener('voiceschanged', function () {
+            voicesList = speechSynthesis.getVoices() || [];
+            console.log('Voices loaded:', voicesList.map(v => v.lang + ' - ' + v.name));
+        });
+    } else {
+        console.log('Voices available:', voicesList.map(v => v.lang + ' - ' + v.name));
+    }
+}
+
+// 초기 로드 시 음성 목록 불러오기
+if (speechSynthesis) {
+    loadVoices();
+}
 
 // 서브 체인지 알림 (탁구/배드민턴/피클볼)
 let serveChangeRule = 2; // 예: 2점마다 서브 교체 (게임 설정에서 받아옴)
@@ -356,10 +376,35 @@ function speakScore(text) {
             speechSynthesis.cancel();
         }
 
+        // 사용자가 선택한 언어 가져오기 (기본 ko-KR)
+        const langSelect = document.getElementById('voiceLangSelect');
+        const selectedLang = (langSelect && langSelect.value) ? langSelect.value : 'ko-KR';
+
         speechUtterance = new SpeechSynthesisUtterance(text);
-        speechUtterance.lang = 'ko-KR';
-        speechUtterance.rate = 0.8;
+        speechUtterance.lang = selectedLang;
+        speechUtterance.rate = 0.85;
         speechUtterance.pitch = 1.0;
+
+        // 가능한 음성 중에서 선택된 언어와 매칭되는 음성 찾기
+        try {
+            const voices = voicesList.length ? voicesList : speechSynthesis.getVoices();
+            if (voices && voices.length) {
+                // 우선 정확한 locale 매칭
+                let matched = voices.find(v => v.lang === selectedLang);
+                if (!matched) {
+                    // lang 코드의 앞부분으로 매칭 (eg. 'en' matches 'en-US')
+                    const langPrefix = selectedLang.split('-')[0];
+                    matched = voices.find(v => v.lang && v.lang.indexOf(langPrefix) === 0);
+                }
+                if (matched) {
+                    speechUtterance.voice = matched;
+                }
+            }
+        } catch (err) {
+            // 안전한 실패: 아무 것도 하지 않음
+            console.warn('voice selection failed', err);
+        }
+
         speechSynthesis.speak(speechUtterance);
     }
 }
