@@ -469,7 +469,7 @@ body.mobile {
     }
     
     .score-display {
-        font-size: clamp(8rem, 30vw, 15rem);
+        font-size: clamp(15rem, 30vw, 15rem);
     }
     
     .vs-divider {
@@ -573,7 +573,7 @@ body.mobile {
     }
     
     .score-display {
-        font-size: clamp(5rem, 20vw, 10rem);
+        font-size: clamp(15rem, 20vw, 10rem);
     }
     
     .sets-display {
@@ -901,7 +901,7 @@ body.android .end-btn {
 /* 점수판 숫자 크기 - 가로 모드에서 축소하여 절반 이상 과대 차지 방지 */
 @media (orientation: landscape) {
     .score-display {
-        font-size: clamp(4rem, 15vw, 12rem);
+        font-size: clamp(15rem, 15vw, 12rem);
     }
     .player-score { padding: 0.75rem; }
 }
@@ -941,7 +941,7 @@ body.android .end-btn {
     overflow: auto;
 }
 
-@media (orientation: landscape) {
+/* @media (orientation: landscape) {
     #gameSettings,
     #gameSelection,
     #gameEnd {
@@ -949,7 +949,7 @@ body.android .end-btn {
         padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
     }
     #selectedGameTitle { margin-top: 0; }
-}
+} */
 
 /* 가로모드: Play1 , Icon, Play2 */
 @media (orientation: landscape) {
@@ -1035,72 +1035,9 @@ body.android .end-btn {
 	.vs-divider { display: none; }
 }
 
-.player-set-score {
-    font-size: 1.1em;
-    color: #667eea;
-    margin-top: 8px;
-    font-weight: bold;
-    letter-spacing: 1px;
-}
+/* consolidated .player-set-score defined in Modern UI overrides */
 
-/* ...existing code... */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0; top: 0; width: 100vw; height: 100vh;
-    background: rgba(30, 41, 59, 0.45);
-    justify-content: center;
-    align-items: center;
-    transition: background 0.2s;
-}
-.modal.active {
-    display: flex;
-}
-.modal-content {
-    background: #fff;
-    border-radius: 18px;
-    box-shadow: 0 8px 32px rgba(30,41,59,0.18);
-    padding: 2.2rem 1.5rem 1.2rem 1.5rem;
-    max-width: 350px;
-    width: 90vw;
-    text-align: center;
-    position: relative;
-    animation: modalFadeIn 0.25s;
-}
-@keyframes modalFadeIn {
-    from { transform: translateY(40px) scale(0.98); opacity: 0; }
-    to   { transform: translateY(0) scale(1); opacity: 1; }
-}
-.modal-close {
-    position: absolute;
-    top: 1rem; right: 1rem;
-    background: none;
-    border: none;
-    font-size: 1.7rem;
-    color: #667eea;
-    cursor: pointer;
-    transition: color 0.2s;
-}
-.modal-close:hover {
-    color: #374151;
-}
-.modal-footer {
-    margin-top: 1.5rem;
-}
-.modal-action {
-    background: #667eea;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 0.6em 1.5em;
-    font-size: 1.1em;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-.modal-action:hover {
-    background: #4752c4;
-}
+/* Duplicate modal rules removed; consolidated modal styles appear later in the file. */
 
 /* Modern UI overrides: large touch-friendly score buttons and refreshed controls */
 .scoreboard-container {
@@ -1148,7 +1085,7 @@ body.android .end-btn {
     font-weight: 900;
     color: #0f172a;
     font-size: clamp(4rem, 20vw, 9.5rem);
-    line-height: 0.95;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     text-shadow: 0 6px 30px rgba(102,126,234,0.06);
 }
@@ -1202,26 +1139,14 @@ body.android .end-btn {
     .scoreboard-container { height: calc(100vh - 84px); padding: 0.6rem; }
 }
 
-/* small polish for modal (slightly darker backdrop and gentle blur) */
-.modal { background: rgba(17,24,39,0.5); backdrop-filter: blur(6px); }
-
-/* end modern overrides */
-
-.player-set-score {
-    font-size: 1.1em;
-    color: #667eea;
-    margin-top: 8px;
-    font-weight: bold;
-    letter-spacing: 1px;
-}
-
-/* ...existing code... */
 .modal {
     display: none;
     position: fixed;
     z-index: 1000;
     left: 0; top: 0; width: 100vw; height: 100vh;
-    background: rgba(30, 41, 59, 0.45);
+    /* slightly darker and blurred backdrop for modern look */
+    background: rgba(17,24,39,0.5);
+    backdrop-filter: blur(6px);
     justify-content: center;
     align-items: center;
     transition: background 0.2s;
@@ -1273,6 +1198,10 @@ body.android .end-btn {
 .modal-action:hover {
     background: #4752c4;
 }
+
+/* end modern overrides */
+
+/* Duplicate/unused styles removed: consolidated modal and player-set-score definitions exist earlier. */
 
 /* Layout: portrait = icons bottom, two large stacked buttons; landscape = icons right, two large side-by-side buttons */
 

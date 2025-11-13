@@ -143,6 +143,15 @@ function showScreen(screenId) {
     } else {
         document.body.classList.remove('fullscreen');
     }
+
+    // If user navigates to game settings, ensure match-type visibility reflects the selected game
+    if (screenId === 'gameSettings') {
+        try {
+            updateMatchTypeVisibility(gameState.selectedGame || '');
+        } catch (e) {
+            console.warn('updateMatchTypeVisibility not available yet', e);
+        }
+    }
 }
 
 // 점수판 업데이트
