@@ -1169,28 +1169,29 @@ body.android .end-btn {
     z-index: 40;
     display: flex;
     justify-content: space-around;
-    gap: 0.75rem;
-    padding: 0.9rem 1rem;
-    background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(250,250,250,0.9));
-    box-shadow: 0 -8px 30px rgba(2,6,23,0.08);
+    gap: 0.5rem; /* reduced vertical/horizontal breathing */
+    padding: 0.45rem 0.6rem; /* tighter padding */
+    background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(250,250,250,0.94));
+    box-shadow: 0 -6px 18px rgba(2,6,23,0.06); /* softer shadow */
     align-items: center;
+    height: auto; /* avoid large explicit height */
 }
 
 .control-btn {
     background: linear-gradient(180deg,#667eea,#5163d9);
     color: #fff;
     border: none;
-    width: 64px;
-    height: 64px;
+    width: 56px; /* slightly smaller for compactness */
+    height: 56px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 16px;
-    font-size: 1.4rem;
-    box-shadow: 0 6px 18px rgba(81,99,217,0.18);
+    border-radius: 14px;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 12px rgba(81,99,217,0.14);
     transition: transform 120ms, box-shadow 120ms, opacity 120ms;
 }
-.control-btn:active { transform: translateY(2px) scale(0.995); box-shadow: 0 4px 10px rgba(81,99,217,0.12); }
+.control-btn:active { transform: translateY(1px) scale(0.997); box-shadow: 0 3px 8px rgba(81,99,217,0.10); }
 .control-btn[title="About"] { background: linear-gradient(180deg,#475569,#334155); }
 
 /* Ensure large hit areas on small screens */
@@ -1341,34 +1342,34 @@ body.android .end-btn {
         height: 100%;
     }
 
-    /* control icons become a vertical bar on the right */
+    /* control icons become a vertical bar on the right (compact) */
     .control-buttons {
         position: absolute;
-        right: 0.5rem;
-        top: 0.5rem;
-        bottom: 0.5rem;
-        width: 84px;
+        right: 0.35rem; /* tucked closer to screen edge */
+        top: 0.35rem;
+        bottom: 0.35rem;
+        width: 72px; /* narrower bar */
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        gap: 0.6rem;
-        padding: 0.5rem;
-        border-radius: 12px;
+        gap: 0.45rem; /* reduced gap */
+        padding: 0.4rem; /* tighter padding */
+        border-radius: 10px;
         background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(250,250,250,0.92));
-        box-shadow: 0 8px 28px rgba(2,6,23,0.06);
+        box-shadow: 0 6px 20px rgba(2,6,23,0.05);
         z-index: 60;
     }
 
-    /* ensure main content doesn't hide behind the right bar */
+    /* ensure main content doesn't hide behind the right bar by reserving a small margin */
     #scoreboard::after {
         content: '';
-        flex: 0 0 96px; /* reserve space on the right for control bar */
+        flex: 0 0 80px; /* reserve space on the right for control bar */
     }
 
     .control-btn {
-        width: 64px;
-        height: 64px;
+        width: 56px;
+        height: 56px;
         border-radius: 12px;
         flex: 0 0 auto;
     }

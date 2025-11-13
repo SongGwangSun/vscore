@@ -445,7 +445,7 @@ function switchCourt() {
     [gameState.player1Score, gameState.player2Score] = [gameState.player2Score, gameState.player1Score];
     [gameState.player1Sets, gameState.player2Sets] = [gameState.player2Sets, gameState.player1Sets];
     updateScoreboard();
-
+    currentServer = currentServer == 1?2:1;
     updateServeColor();
 
     speakScore('코트가 교체되었습니다.');
