@@ -2,6 +2,7 @@
 let gameState = {
     state: '',
     selectedGame: '',
+    selectedLanguage: 'ko-KR',
     winScore: 11,
     totalSets: 3,
     currentSet: 1,
@@ -37,6 +38,52 @@ function loadVoices() {
 // 초기 로드 시 음성 목록 불러오기
 if (speechSynthesis) {
     loadVoices();
+}
+
+// Narration templates (multi-language)
+const narrations = {
+    gameStart: { ko: '게임 시작!', en: 'Game start!' },
+    score: { ko: '{p1} 대 {p2}', en: '{p1} to {p2}' },
+    serveChange: { ko: '서브 교체!', en: 'Serve change!' },
+    setWin: { ko: '플레이어 {player} 세트 승리!', en: 'Player {player} wins the set!' },
+    setStart: { ko: '{set}세트 시작! 0 대 0', en: '{set} set start! 0 to 0' },
+    gameEnd: { ko: '게임 종료! {winnerText}', en: 'Game over! {winnerText}' },
+    reset: { ko: '0 대 0, 세트 리셋', en: '0 to 0, set reset' },
+    undo: { ko: '실수 수정 완료', en: 'Undo complete' },
+    courtSwap: { ko: '코트가 교체되었습니다.', en: 'Court switched.' }
+};
+
+function getLangCode() {
+    const langSelect = document.getElementById('voiceLangSelect');
+    const selected = (langSelect && langSelect.value) ? langSelect.value : 'ko-KR';
+    return selected.split('-')[0] === 'ko' ? 'ko' : 'en';
+}
+
+function formatTemplate(template, vars) {
+    return template.replace(/\{([^}]+)\}/g, (_, key) => (vars && vars[key] !== undefined) ? vars[key] : '');
+}
+
+function getNarrationText(key, vars) {
+    const lang = getLangCode();
+    if (!narrations[key]) return '';
+
+    // Special case for score in Korean to speak '십 대 ...' style when a player has 10
+    if (key === 'score' && lang === 'ko') {
+        const p1 = vars.p1, p2 = vars.p2;
+        if (p1 === 10 || p2 === 10) {
+            if (p1 === 10 && p2 !== 10) return `십 대 ${p2}`;
+            if (p2 === 10 && p1 !== 10) return `${p1} 대 십`;
+            return `십 대 십`;
+        }
+    }
+
+    const template = narrations[key][lang] || narrations[key]['en'];
+    return formatTemplate(template, vars || {});
+}
+
+function speakNarration(key, vars) {
+    const text = getNarrationText(key, vars);
+    if (text) speakScore(text);
 }
 
 // 서브 체인지 알림 (탁구/배드민턴/피클볼)
@@ -105,12 +152,15 @@ function startGame() {
         serveChangeRule = isSingle ? 1 : 2; // 단식 1점, 복식 2점마다 서브 교체
     }
 
+    const langSelect = document.getElementById('voiceLangSelect');
+    gameState.selectedLang = (langSelect && langSelect.value) ? langSelect.value : 'ko-KR';
+
     updateScoreboard();
     showScreen('scoreboard');
 
     gameState.state = 'inGame';
     // 게임 시작 안내
-    speakScore('게임 시작!');
+    speakNarration('gameStart');
 }
 
 // 화면 전환
@@ -132,7 +182,7 @@ function showScreen(screenId) {
     }
 
     // 모바일에서 전체화면 설정
-    if (screenId === 'scoreboard') {
+    if (screenId === 'scoreboard' || screenId === 'gameSettings') {
         document.body.classList.add('fullscreen');
         // 모바일에서 화면 방향 고정
         if (targetScreen && targetScreen.orientation && targetScreen.orientation.lock) {
@@ -145,13 +195,13 @@ function showScreen(screenId) {
     }
 
     // If user navigates to game settings, ensure match-type visibility reflects the selected game
-    if (screenId === 'gameSettings') {
-        try {
-            updateMatchTypeVisibility(gameState.selectedGame || '');
-        } catch (e) {
-            console.warn('updateMatchTypeVisibility not available yet', e);
-        }
-    }
+    // if (screenId === 'gameSettings') {
+    //     try {
+    //         updateMatchTypeVisibility(gameState.selectedGame || '');
+    //     } catch (e) {
+    //         console.warn('updateMatchTypeVisibility not available yet', e);
+    //     }
+    // }
 }
 
 // 점수판 업데이트
@@ -190,7 +240,7 @@ function updateScore(player, delta) {
 
     console.log('updateScore lastAction : ', lastAction);
 
-    lastAction = 'updateScore';
+        lastAction = 'updateScore'; // Keep formatting consistent
 
     totalPoints = gameState.player1Score + gameState.player2Score;
 
@@ -243,22 +293,8 @@ function updateScore(player, delta) {
         }
     }
 
-    // if (selectedLanguage == 'en-US' || selectedLanguage == 'en-GB') {
-    //     speakScore(`${player1ScoreBefore} to ${player2ScoreBefore}`);
-    // }
-    // else {
-        if (player1ScoreBefore == 10 || player2ScoreBefore == 10) {
-            if (player1ScoreBefore == 10 && player2ScoreBefore != 10)
-                speakScore(`십 대 ${player2ScoreBefore}`);
-            else if (player1ScoreBefore != 10 && player2ScoreBefore == 10)
-                speakScore(`${player1ScoreBefore} 대 십`);
-            else if (player1ScoreBefore == 10 && player2ScoreBefore == 10)
-                speakScore(`십 대 십`);
-        }
-        else
-            speakScore(`${player1ScoreBefore} 대 ${player2ScoreBefore}`);
-    // }
-
+    // speak score using narration templates
+    speakNarration('score', { p1: player1ScoreBefore, p2: player2ScoreBefore });
 
     gameState.player1Score = player1ScoreBefore;
     gameState.player2Score = player2ScoreBefore;
@@ -294,7 +330,7 @@ function showServeChangeAlert() {
     const alert = document.createElement('div');
     alert.className = 'serve-change-alert';
     alert.textContent = '서브 교체!';
-    speakScore(`서브 교체!`);
+    speakNarration('serveChange');
     document.body.appendChild(alert);
     setTimeout(() => alert.remove(), 1500); // 1.5초 후 자동 제거
 }
@@ -317,11 +353,11 @@ function endSet(winner) {
     gameState.state = 'setEnd';
     if (winner === 1) {
         gameState.player1Sets++;
-        speakScore('플레이어 1 세트 승리!');
+        speakNarration('setWin', { player: 1 });
     } else {
         gameState.player2Sets++;
-        speakScore('플레이어 2 세트 승리!');
-    }
+        speakNarration('setWin', { player: 2 });
+    speakNarration('courtSwap');
 
     updateScoreboard();
 
@@ -338,7 +374,7 @@ function endSet(winner) {
             gameState.state = 'inGame';
 
             updateScoreboard();
-            speakScore(`${gameState.currentSet}세트 시작! 0 대 0`);
+            speakNarration('setStart', { set: gameState.currentSet });
         }, 2000);
     }
 }
@@ -352,8 +388,10 @@ function endGame() {
     document.getElementById('winnerText').textContent = winnerText;
     document.getElementById('finalScore').textContent = finalScore;
 
-    speakScore(`게임 종료! ${winnerText}`);
+    speakNarration('gameEnd', { winnerText });
 
+    // also announce via narration object
+    // show game end screen after a short delay
     setTimeout(() => {
         showScreen('gameEnd');
     }, 3000);
@@ -364,7 +402,7 @@ function resetSet() {
     gameState.player1Score = 0;
     gameState.player2Score = 0;
     updateScoreboard();
-    speakScore('0 대 0, 세트 리셋');
+    speakNarration('reset');
 }
 
 // 마지막 점수 취소
@@ -379,7 +417,7 @@ function undoLastScore() {
             }
         }
         updateScoreboard();
-        speakScore('실수 수정 완료');
+        speakNarration('undo');
     }
 }
 
@@ -392,11 +430,11 @@ function speakScore(text) {
         }
 
         // 사용자가 선택한 언어 가져오기 (기본 ko-KR)
-        const langSelect = document.getElementById('voiceLangSelect');
-        const selectedLang = (langSelect && langSelect.value) ? langSelect.value : 'ko-KR';
+        // const langSelect = document.getElementById('voiceLangSelect');
+        // const selectedLang = (langSelect && langSelect.value) ? langSelect.value : 'ko-KR';
 
         speechUtterance = new SpeechSynthesisUtterance(text);
-        speechUtterance.lang = selectedLang;
+        speechUtterance.lang = gameState.selectedLang;
         speechUtterance.rate = 0.85;
         speechUtterance.pitch = 1.0;
 
@@ -454,7 +492,7 @@ function switchCourt() {
     [gameState.player1Score, gameState.player2Score] = [gameState.player2Score, gameState.player1Score];
     [gameState.player1Sets, gameState.player2Sets] = [gameState.player2Sets, gameState.player1Sets];
     updateScoreboard();
-    currentServer = currentServer == 1?2:1;
+    currentServer = currentServer == 1 ? 2 : 1;
     updateServeColor();
 
     speakScore('코트가 교체되었습니다.');

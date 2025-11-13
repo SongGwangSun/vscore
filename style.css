@@ -955,7 +955,7 @@ body.android .end-btn {
 @media (orientation: landscape) {
 	#scoreboard {
 		display: grid;
-		grid-template-rows: auto 1fr auto;   /* 상단 고정, 하단 가변 */
+		grid-template-rows: 1fr auto 1fr auto;   /* 상단 고정, 하단 가변 */
 /*		grid-template-columns: 1fr 1fr; /* 상단은 좌/우 두 칸 */
 		gap: 0.5rem;
 		height: 100vh;
