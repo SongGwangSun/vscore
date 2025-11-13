@@ -105,7 +105,7 @@ function selectGame(game) {
         'Jokgu': '족구'
 
     };
-    document.getElementById('selectedGameTitle').textContent = `${gameNames[game]} 게임 설정`;
+    document.getElementById('selectedGameTitle').textContent = `${gameNames[game]} 게임 설정(Setting)`;
     showScreen('gameSettings');
 
     updateMatchTypeVisibility(game);
@@ -122,7 +122,7 @@ function startGame() {
     const matchTypeInput = document.querySelector('input[name="matchType"]:checked');
 
     if (!winScoreRange || !totalSetsInput) {
-        alert('게임 설정을 선택해주세요.');
+        alert('게임 설정을 선택해주세요. (Please select game settings.)');
         return;
     }
 
@@ -329,7 +329,7 @@ function showServeChangeAlert() {
     // 화면에 서브 교체 알림 표시
     const alert = document.createElement('div');
     alert.className = 'serve-change-alert';
-    alert.textContent = '서브 교체!';
+    alert.textContent = '서브 교체(Serve change)!';
     speakNarration('serveChange');
     document.body.appendChild(alert);
     setTimeout(() => alert.remove(), 1500); // 1.5초 후 자동 제거
@@ -382,7 +382,7 @@ function endSet(winner) {
 // 게임 종료
 function endGame() {
     const winner = gameState.player1Sets > gameState.player2Sets ? 1 : 2;
-    const winnerText = `플레이어 ${winner} 승리!`;
+    const winnerText = `Player ${winner} 승리(Winner)!`;
     const finalScore = `${gameState.player1Sets} - ${gameState.player2Sets}`;
 
     document.getElementById('winnerText').textContent = winnerText;
@@ -500,7 +500,7 @@ function switchCourt() {
 
 // 정보 보기
 function showAbout() {
-    alert('스포츠 점수판 v1.0\n제작: sun2soft \n문의: songgs33@gmail.com');
+    alert('Smart-Score v1.0\nCreation: sun2soft \nInquiry: songgs33@gmail.com');
 }
 
 // 초기화 함수
