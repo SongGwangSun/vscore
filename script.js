@@ -357,7 +357,7 @@ function endSet(winner) {
     } else {
         gameState.player2Sets++;
         speakNarration('setWin', { player: 2 });
-    speakNarration('courtSwap');
+    }
 
     updateScoreboard();
 
@@ -417,7 +417,7 @@ function undoLastScore() {
             }
         }
         updateScoreboard();
-        speakNarration('undo');
+        speakScore('실수 수정 완료');
     }
 }
 
@@ -743,7 +743,7 @@ if ('caches' in window) {
 
 function updateMatchTypeVisibility(game) {
     const matchTypeGroup = document.getElementById('matchTypeGroup');
-    if (game === 'pingpong' || game === 'badminton') {
+    if (game === 'pingpong' || game === 'badminton' || game === 'pickleball') {
         matchTypeGroup.style.display = '';
     } else {
         matchTypeGroup.style.display = 'none';
