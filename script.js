@@ -151,6 +151,7 @@ function updateScoreboard() {
     document.getElementById('score2').textContent = gameState.player2Score;
     document.getElementById('player1SetsInline').textContent = gameState.player1Sets;
     document.getElementById('player2SetsInline').textContent = gameState.player2Sets;
+    updateServeColor();
 }
 
 // 점수 증가
@@ -233,10 +234,10 @@ function updateScore(player, delta) {
         }
     }
 
-    if (selectedLanguage == 'en-US' || selectedLanguage == 'en-GB') {
-        speakScore(`${player1ScoreBefore} to ${player2ScoreBefore}`);
-    }
-    else {
+    // if (selectedLanguage == 'en-US' || selectedLanguage == 'en-GB') {
+    //     speakScore(`${player1ScoreBefore} to ${player2ScoreBefore}`);
+    // }
+    // else {
         if (player1ScoreBefore == 10 || player2ScoreBefore == 10) {
             if (player1ScoreBefore == 10 && player2ScoreBefore != 10)
                 speakScore(`십 대 ${player2ScoreBefore}`);
@@ -247,7 +248,7 @@ function updateScore(player, delta) {
         }
         else
             speakScore(`${player1ScoreBefore} 대 ${player2ScoreBefore}`);
-    }
+    // }
 
 
     gameState.player1Score = player1ScoreBefore;
@@ -269,7 +270,6 @@ function updateScore(player, delta) {
         if (serveChanged) {
             showServeChangeAlert();
         }
-        updateServeColor();
     }
     lastAction = 'endSet';
     console.log('updateScore exit lastAction : ', lastAction);
@@ -446,7 +446,7 @@ function switchCourt() {
     [gameState.player1Sets, gameState.player2Sets] = [gameState.player2Sets, gameState.player1Sets];
     updateScoreboard();
 
-            updateServeColor();
+    updateServeColor();
 
     speakScore('코트가 교체되었습니다.');
 }
