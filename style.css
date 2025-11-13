@@ -937,11 +937,11 @@ body.android .end-btn {
 #gameSelection.screen,
 #gameEnd.screen {
     height: auto;
-    min-height: 100vh;
+    min-height: 10vh;
     overflow: auto;
 }
 
-/* @media (orientation: landscape) {
+@media (orientation: landscape) {
     #gameSettings,
     #gameSelection,
     #gameEnd {
@@ -949,7 +949,7 @@ body.android .end-btn {
         padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
     }
     #selectedGameTitle { margin-top: 0; }
-} */
+} 
 
 /* 가로모드: Play1 , Icon, Play2 */
 @media (orientation: landscape) {
