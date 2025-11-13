@@ -233,16 +233,22 @@ function updateScore(player, delta) {
         }
     }
 
-    if (player1ScoreBefore == 10 || player2ScoreBefore == 10) {
-        if (player1ScoreBefore == 10 && player2ScoreBefore != 10)
-            speakScore(`십 대 ${player2ScoreBefore}`);
-        else if (player1ScoreBefore != 10 && player2ScoreBefore == 10)
-            speakScore(`${player1ScoreBefore} 대 십`);
-        else if (player1ScoreBefore == 10 && player2ScoreBefore == 10)
-            speakScore(`십 대 십`);
+    if (selectedLanguage == 'en-US' || selectedLanguage == 'en-GB') {
+        speakScore(`${player1ScoreBefore} to ${player2ScoreBefore}`);
     }
-    else
-        speakScore(`${player1ScoreBefore} 대 ${player2ScoreBefore}`);
+    else {
+        if (player1ScoreBefore == 10 || player2ScoreBefore == 10) {
+            if (player1ScoreBefore == 10 && player2ScoreBefore != 10)
+                speakScore(`십 대 ${player2ScoreBefore}`);
+            else if (player1ScoreBefore != 10 && player2ScoreBefore == 10)
+                speakScore(`${player1ScoreBefore} 대 십`);
+            else if (player1ScoreBefore == 10 && player2ScoreBefore == 10)
+                speakScore(`십 대 십`);
+        }
+        else
+            speakScore(`${player1ScoreBefore} 대 ${player2ScoreBefore}`);
+    }
+
 
     gameState.player1Score = player1ScoreBefore;
     gameState.player2Score = player2ScoreBefore;
@@ -439,6 +445,9 @@ function switchCourt() {
     [gameState.player1Score, gameState.player2Score] = [gameState.player2Score, gameState.player1Score];
     [gameState.player1Sets, gameState.player2Sets] = [gameState.player2Sets, gameState.player1Sets];
     updateScoreboard();
+
+            updateServeColor();
+
     speakScore('코트가 교체되었습니다.');
 }
 
