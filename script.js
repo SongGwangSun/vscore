@@ -240,7 +240,7 @@ function updateScore(player, delta) {
 
     console.log('updateScore lastAction : ', lastAction);
 
-        lastAction = 'updateScore'; // Keep formatting consistent
+    lastAction = 'updateScore'; // Keep formatting consistent
 
     totalPoints = gameState.player1Score + gameState.player2Score;
 
