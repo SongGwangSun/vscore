@@ -505,7 +505,7 @@ function switchCourt() {
 
 // 정보 보기
 function showAbout() {
-    alert('Smart-Score v1.0\nCreation: sun2soft \nInquiry: songgs33@gmail.com');
+    alert('SportScore v1.0\nCreation: sun2soft \nInquiry: songgs33@gmail.com');
 }
 
 // 초기화 함수

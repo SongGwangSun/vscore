@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart-Score</title>
+    <title>SportScore</title>
     <link rel="stylesheet" href="style.css">
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Smart-Score">
+    <meta name="apple-mobile-web-app-title" content="SportScore">
     <meta name="format-detection" content="telephone=no">
     <meta name="apple-touch-fullscreen" content="yes">
     <meta name="apple-mobile-web-app-orientations" content="portrait">
@@ -18,7 +18,7 @@
 <body>
     <!-- 게임 선택 화면 -->
     <div id="gameSelection" class="screen">
-        <h1>Smart-Score</h1>
+        <h1>스포트점수 (SportScore)</h1>
         <div class="game-buttons">
             <button class="game-btn" onclick="selectGame('pickleball')" type="button">
                 <div class="game-icon">🥒</div>
@@ -44,7 +44,7 @@
         <h2 id="selectedGameTitle">게임 설정(Setting)</h2>
         <div class="settings-container">
             <div class="setting-group">
-                <label for="winScoreRange">승리 점수(WinScore): <span id="winScoreValue">11</span>점</label>
+                <label for="winScoreRange">승리 점수(WinScore): <span id="winScoreValue">11</span>점(Point)</label>
                 <input
                     type="range"
                     id="winScoreRange"
@@ -135,7 +135,7 @@
     <div id="aboutModal" class="modal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeAboutModal()" aria-label="닫기(Close)">&times;</button>
-            <h2>Smart-Score</h2>
+            <h2>SportScore</h2>
             <p>버전(Version): <strong>v1.0</strong></p>
             <p>제작(creation): <strong>sun2soft</strong></p>
             <p>문의(Inquiry): <a href="mailto:songgs33@gmail.com">songgs33@gmail.com</a></p>
