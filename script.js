@@ -65,6 +65,7 @@ function formatTemplate(template, vars) {
 
 function getNarrationText(key, vars) {
     const lang = getLangCode();
+    console.log('getNarrationText key:', key, 'lang:', lang, 'vars:', vars);
     if (!narrations[key]) return '';
 
     // Special case for score in Korean to speak '십 대 ...' style when a player has 10
@@ -78,11 +79,13 @@ function getNarrationText(key, vars) {
     }
 
     const template = narrations[key][lang] || narrations[key]['en'];
+    console.log('getNarrationText template:', template, 'lang:', lang, 'vars:', vars);
     return formatTemplate(template, vars || {});
 }
 
 function speakNarration(key, vars) {
     const text = getNarrationText(key, vars);
+    console.log('speakNarration text:', text);
     if (text) speakScore(text);
 }
 
@@ -238,7 +241,7 @@ function increaseScore(player) {
 function updateScore(player, delta) {
     if (lastAction != 'endSet') return;
 
-    console.log('updateScore lastAction : ', lastAction);
+    // console.log('updateScore lastAction : ', lastAction);
 
     lastAction = 'updateScore'; // Keep formatting consistent
 
@@ -317,7 +320,7 @@ function updateScore(player, delta) {
         }
     }
     lastAction = 'endSet';
-    console.log('updateScore exit lastAction : ', lastAction);
+    // console.log('updateScore exit lastAction : ', lastAction);
 }
 
 function updateServeColor() {
@@ -433,6 +436,8 @@ function speakScore(text) {
         // const langSelect = document.getElementById('voiceLangSelect');
         // const selectedLang = (langSelect && langSelect.value) ? langSelect.value : 'ko-KR';
 
+        console.log('speakScore text:', text, 'selectedLang:', gameState.selectedLang);
+
         speechUtterance = new SpeechSynthesisUtterance(text);
         speechUtterance.lang = gameState.selectedLang;
         speechUtterance.rate = 0.85;
@@ -443,10 +448,10 @@ function speakScore(text) {
             const voices = voicesList.length ? voicesList : speechSynthesis.getVoices();
             if (voices && voices.length) {
                 // 우선 정확한 locale 매칭
-                let matched = voices.find(v => v.lang === selectedLang);
+                let matched = voices.find(v => v.lang === gameState.selectedLang);
                 if (!matched) {
                     // lang 코드의 앞부분으로 매칭 (eg. 'en' matches 'en-US')
-                    const langPrefix = selectedLang.split('-')[0];
+                    const langPrefix = gameState.selectedLang.split('-')[0];
                     matched = voices.find(v => v.lang && v.lang.indexOf(langPrefix) === 0);
                 }
                 if (matched) {
