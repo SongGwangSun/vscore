@@ -2,7 +2,7 @@
 let gameState = {
     state: '',
     selectedGame: '',
-    selectedLanguage: 'ko-KR',
+    selectedLang: 'ko-KR',
     winScore: 11,
     totalSets: 3,
     currentSet: 1,
@@ -44,7 +44,11 @@ if (speechSynthesis) {
 const narrations = {
     gameStart: { ko: '게임 시작!', en: 'Game start!' },
     score: { ko: '{p1} 대 {p2}', en: '{p1} to {p2}' },
+    Nextserve: { ko: '다음 서브!', en: 'Next Serve!' },
+    right: { ko: '오른쪽!', en: 'Right' },
+    left: { ko: '왼쪽!', en: 'Left !' },
     serveChange: { ko: '서브 교체!', en: 'Serve change!' },
+    servePosition: { ko: '서브: 플레이어 {player}, {side}에서 서브하세요', en: 'Server {player}: serve from the {side}' },
     setWin: { ko: '플레이어 {player} 세트 승리!', en: 'Player {player} wins the set!' },
     setStart: { ko: '{set}세트 시작! 0 대 0', en: '{set} set start! 0 to 0' },
     gameEnd: { ko: '게임 종료! {winnerText}', en: 'Game over! {winnerText}' },
@@ -87,6 +91,28 @@ function speakNarration(key, vars) {
     const text = getNarrationText(key, vars);
     console.log('speakNarration text:', text);
     if (text) speakScore(text);
+}
+
+// Determine serve side (right/left) based on game rules (simplified)
+function determineServeSide(serverPlayer) {
+    const game = gameState.selectedGame;
+    const serverScore = serverPlayer === 1 ? gameState.player1Score : gameState.player2Score;
+    // Simplified rule: if server's score is even -> right, odd -> left
+    // This matches badminton/pickleball singles conventions; applied to pingpong here for guidance.
+    const sideKey = (serverScore % 2 === 0) ? 'right' : 'left';
+    return sideKey;
+}
+
+function getSideLocalized(sideKey) {
+    const lang = getLangCode();
+    if (lang === 'ko') return sideKey === 'right' ? '오른쪽' : '왼쪽';
+    return sideKey === 'right' ? 'right' : 'left';
+}
+
+function speakServePosition(serverPlayer) {
+    const sideKey = determineServeSide(serverPlayer);
+    const sideLocalized = getSideLocalized(sideKey);
+    speakNarration('servePosition', { player: serverPlayer, side: sideLocalized });
 }
 
 // 서브 체인지 알림 (탁구/배드민턴/피클볼)
@@ -143,14 +169,14 @@ function startGame() {
     ServerCount = 1;    // 배드민턴 서브 규칙 (처음만 1인 서브 교체)
     ServerChange = 0;   // 서브 교체
     lastAction = 'endSet';  // default last action
-    lastActionTime = new Date().getTime();
 
     gameState.matchType = matchTypeInput ? matchTypeInput.value : 'single';
 
     // 경기 방식에 따라 서브 교체 룰 결정
     let isSingle = gameState.matchType === 'single';
     if (gameState.selectedGame == 'pingpong') {
-        serveChangeRule = isSingle ? 2 : 5; // 단식 2점, 복식 5점마다 서브 교체
+        // serveChangeRule = isSingle ? 2 : 5; // 단식 2점, 복식 5점마다 서브 교체
+        serveChangeRule = 2; // 단식, 복식 2점마다 서브 교체
     } else if (gameState.selectedGame == 'badminton' || gameState.selectedGame == 'pickleball') {
         serveChangeRule = isSingle ? 1 : 2; // 단식 1점, 복식 2점마다 서브 교체
     }
@@ -164,6 +190,8 @@ function startGame() {
     gameState.state = 'inGame';
     // 게임 시작 안내
     speakNarration('gameStart');
+    // announce initial serve position
+    setTimeout(() => speakServePosition(currentServer), 600);
 }
 
 // 화면 전환
@@ -218,7 +246,6 @@ function updateScoreboard() {
 
 // 점수 증가
 function increaseScore(player) {
-
     if (gameState.state != 'inGame') return;
     const currentTime = new Date().getTime();
     const timeDiff = currentTime - gameState.lastTapTime;
@@ -260,38 +287,54 @@ function updateScore(player, delta) {
     let isDeuce = (player1ScoreBefore >= gameState.winScore - 1 &&
         player2ScoreBefore >= gameState.winScore - 1);
 
-    let currentServeChangeRule = isDeuce ? 1 : serveChangeRule;
-
-    let serveChanged = false; // 서브 교체 여부
+    let serveChanged = 0; // 서브 교체 여부, 0 - 없음, 1 - 1번 플레이어 서브, 2 - 2번 플레이어 서브
 
     // 서브권 계산
     if (totalPoints === 0) {
-        currentServer = 1; // 첫 서브는 1번 플레이어
+        if (gameState.selectedGame == 'badminton' || gameState.selectedGame == 'pickleball') {
+            currentServer = 1; // 첫 서브는 1번 플레이어
+            serveChanged = currentServer == player ? 0 : 2;
+            currentServer = player; // 서브권을 점수 올린 플레이어로 변경
+            ServerCount = 2;
+        }
     } else {
         if (gameState.selectedGame == 'badminton' || gameState.selectedGame == 'pickleball') {
-            if (currentServer != player && ServerCount == 1) {
-                ServerCount = 2; // 서브권이 바뀌었으므로 2로 변경
+            if (gameState.matchType === 'single') {
+                // 단식인 경우 바로 서브 교체
+                serveChanged = currentServer == player ? 0 : 2;
                 currentServer = player; // 서브권을 점수 올린 플레이어로 변경
-                serveChanged = true;
             }
-            else if (currentServer != player && ServerCount == 2) {
-                ServerCount = 1; // 서브권이 바뀌었으므로 1로 변경
-                // currentServer = player; // 서브권을 점수 올린 플레이어로 변경
+            else {
+                if (currentServer != player) {
+                    if (ServerCount == 1) {
+                        serveChanged = 1;
+                        ServerCount = 2;
+                    }
+                    else if (ServerCount == 2) {
+                        ServerCount = 1;        // 서브권이 바뀌었으므로 1로 변경
+                        serveChanged = 2;
+                        currentServer = player; // 서브권을 점수 올린 플레이어로 변경
+                    }
+                }
             }
         }
         else if (gameState.selectedGame == 'pingpong') {
-            let serveTurn = Math.floor(totalPoints / currentServeChangeRule) % 2;
-            let newServer = serveTurn === 0 ? 1 : 2;
-            if (currentServer !== newServer) {
-                currentServer = newServer;
-                serveChanged = true;
+            if (currentServer != player) {
+                if (ServerCount == 1) {
+                    serveChanged = 1;
+                    ServerCount = 2;
+                }
+                else if (ServerCount == 2) {
+                    ServerCount = 1;        // 서브권이 바뀌었으므로 1로 변경
+                    serveChanged = 2;
+                    currentServer = player; // 서브권을 점수 올린 플레이어로 변경
+                }
             }
         }
         else if (gameState.selectedGame == 'Jokgu') {
             if (currentServer != player) {
                 currentServer = player;
-                currentServeChangeRule = 1;
-                serveChanged = true;
+                serveChanged = 2;
             }
         }
     }
@@ -313,10 +356,16 @@ function updateScore(player, delta) {
         endSet(winner);
     }
     else {
-
-        // serveChanged가 true면 서브 교체 알림
-        if (serveChanged) {
+        // serveChanged가 1: 다음서브, 2면 서브 교체 알림
+        if (serveChanged == 1) {
+            showNextServeAlert(player);
+            // also announce which side to serve from
+            setTimeout(() => speakServePosition(currentServer), 300);
+        }
+        else if (serveChanged == 2) {
             showServeChangeAlert();
+            // also announce which side to serve from
+            setTimeout(() => speakServePosition(currentServer), 300);
         }
     }
     lastAction = 'endSet';
@@ -332,8 +381,22 @@ function showServeChangeAlert() {
     // 화면에 서브 교체 알림 표시
     const alert = document.createElement('div');
     alert.className = 'serve-change-alert';
-    alert.textContent = '서브 교체(Serve change)!';
+    alert.textContent = '서브 교체\nServe change !';
     speakNarration('serveChange');
+    document.body.appendChild(alert);
+    setTimeout(() => alert.remove(), 1500); // 1.5초 후 자동 제거
+}
+
+function showNextServeAlert(serverPlayer) {
+    // 화면에 다음 서브 알림 표시
+    const alert = document.createElement('div');
+    const sideKey = determineServeSide(serverPlayer);
+
+    alert.className = 'serve-change-alert';
+    const textContent = sideKey === '오른쪽' ? 'right' : 'left';
+    alert.textContent = '다음 서브' + getSideLocalized(sideKey) + '\nNext Serve \n' + textContent;
+
+    speakNarration('Nextserve', { sideKey });
     document.body.appendChild(alert);
     setTimeout(() => alert.remove(), 1500); // 1.5초 후 자동 제거
 }
@@ -420,7 +483,7 @@ function undoLastScore() {
             }
         }
         updateScoreboard();
-        speakScore('실수 수정 완료');
+        speakNarration('undo');
     }
 }
 
@@ -431,10 +494,6 @@ function speakScore(text) {
         if (speechUtterance) {
             speechSynthesis.cancel();
         }
-
-        // 사용자가 선택한 언어 가져오기 (기본 ko-KR)
-        // const langSelect = document.getElementById('voiceLangSelect');
-        // const selectedLang = (langSelect && langSelect.value) ? langSelect.value : 'ko-KR';
 
         console.log('speakScore text:', text, 'selectedLang:', gameState.selectedLang);
 
@@ -500,7 +559,8 @@ function switchCourt() {
     currentServer = currentServer == 1 ? 2 : 1;
     updateServeColor();
 
-    speakScore('코트가 교체되었습니다.');
+    speakNarration('courtSwap');
+    setTimeout(() => speakServePosition(currentServer), 300);
 }
 
 // 정보 보기
@@ -628,15 +688,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }, { passive: false });
 
-    // 더블 탭 줌 방지
-    // document.addEventListener('touchend', function (e) {
-    //     const now = (new Date()).getTime();
-    //     if (now - gameState.lastTapTime <= 300) {
-    //         e.preventDefault();
-    //     }
-    // }, { passive: false });
-
-
     // 키보드 단축키
     document.addEventListener('keydown', function (e) {
         if (document.getElementById('scoreboard').classList.contains('active')) {
@@ -710,6 +761,18 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     console.log('Event listeners set up successfully');
+
+    // Keep selected voice language in sync
+    const langSelect = document.getElementById('voiceLangSelect');
+    if (langSelect) {
+        // initialize
+        gameState.selectedLang = langSelect.value || gameState.selectedLang;
+        langSelect.addEventListener('change', function () {
+            gameState.selectedLang = this.value;
+            // reload voices to pick best match
+            loadVoices();
+        });
+    }
 });
 
 // PWA 지원을 위한 서비스 워커 등록 (일시적으로 비활성화)
