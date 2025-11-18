@@ -565,7 +565,18 @@ function switchCourt() {
 
 // 정보 보기
 function showAbout() {
-    alert('SportScore v1.0\nCreation: sun2soft \nInquiry: songgs33@gmail.com');
+    const aboutModal = document.getElementById('aboutModal');
+    if (aboutModal) {
+        aboutModal.classList.add('active');
+    }
+}
+
+// About 모달 닫기
+function closeAboutModal() {
+    const aboutModal = document.getElementById('aboutModal');
+    if (aboutModal) {
+        aboutModal.classList.remove('active');
+    }
 }
 
 // 초기화 함수
