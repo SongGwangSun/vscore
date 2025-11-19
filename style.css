@@ -550,6 +550,11 @@ body.mobile {
     margin-bottom: 2rem;
 }
 
+.voice-display {
+    margin: 2rem 0;
+}
+
+
 .winner-display {
     margin: 2rem 0;
 }

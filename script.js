@@ -312,6 +312,14 @@ function voiceLanguage() {
     const modal = document.getElementById('voiceLanguage');
     if (modal) modal.classList.add('active');
 }
+// About 모달 닫기
+function closevoiceLanguage() {
+    const modal = document.getElementById('voiceLanguage');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
 
 function toggleGameMenu() {
     const menu = document.getElementById('gameMenu');
