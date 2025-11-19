@@ -199,7 +199,7 @@ body.mobile {
     padding: 3rem;
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     max-width: 500px;
-    width: 90%;
+    width: 100%;
     overflow-y: auto;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
