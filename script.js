@@ -141,6 +141,127 @@ function loadPlayerNamesFromStorage() {
     } catch (e) { console.warn('loadPlayerNamesFromStorage failed', e); }
 }
 
+// --- Saved names (pre-registered players) ---
+function loadSavedNames() {
+    try {
+        const s = localStorage.getItem('vscore_saved_names');
+        return s ? JSON.parse(s) : [];
+    } catch (e) { console.warn('loadSavedNames failed', e); return []; }
+}
+
+function saveSavedNames(list) {
+    try {
+        localStorage.setItem('vscore_saved_names', JSON.stringify(list || []));
+    } catch (e) { console.warn('saveSavedNames failed', e); }
+}
+
+function addSavedName(name) {
+    if (!name) return;
+    const list = loadSavedNames();
+    if (!list.includes(name)) {
+        list.push(name);
+        saveSavedNames(list);
+    }
+}
+
+function showSavedNamesPicker(inputId, btn) {
+    // remove existing dropdowns
+    document.querySelectorAll('.saved-names-dropdown').forEach(d => d.remove());
+
+    const names = loadSavedNames();
+    if (!names || names.length === 0) {
+        alert('저장된 선수 이름이 없습니다. 선수 등록 후 사용하세요.');
+        return;
+    }
+
+    const rect = btn.getBoundingClientRect();
+    const dropdown = document.createElement('div');
+    dropdown.className = 'saved-names-dropdown';
+    dropdown.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+    dropdown.style.left = (rect.left + window.scrollX) + 'px';
+
+    names.forEach(n => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = n;
+        b.addEventListener('click', () => {
+            const input = document.getElementById(inputId);
+            if (input) input.value = n;
+            dropdown.remove();
+        });
+        dropdown.appendChild(b);
+    });
+
+    // click outside to close
+    setTimeout(() => {
+        document.addEventListener('click', function onDocClick(ev) {
+            if (!dropdown.contains(ev.target) && ev.target !== btn) {
+                dropdown.remove();
+                document.removeEventListener('click', onDocClick);
+            }
+        });
+    }, 10);
+
+    document.body.appendChild(dropdown);
+}
+
+function addNewSavedName() {
+    const val = document.getElementById('newSavedName') ? document.getElementById('newSavedName').value.trim() : '';
+    if (!val) return alert('이름을 입력하세요.');
+    addSavedName(val);
+    document.getElementById('newSavedName').value = '';
+    renderSavedNamesList();
+}
+
+function openSavedNamesManager() {
+    renderSavedNamesList();
+    const modal = document.getElementById('savedNamesModal');
+    if (modal) modal.classList.add('active');
+}
+
+function closeSavedNamesManager() {
+    const modal = document.getElementById('savedNamesModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function renderSavedNamesList() {
+    const container = document.getElementById('savedNamesList');
+    if (!container) return;
+    container.innerHTML = '';
+    const list = loadSavedNames();
+    if (!list || list.length === 0) { container.innerHTML = '<div style="color:#666;padding:0.5rem;">저장된 이름이 없습니다.</div>'; return; }
+    list.forEach((n, idx) => {
+        const row = document.createElement('div');
+        row.style.display = 'flex'; row.style.alignItems = 'center'; row.style.justifyContent = 'space-between'; row.style.padding = '0.35rem 0';
+        const label = document.createElement('div'); label.textContent = n; label.style.flex = '1';
+        const actions = document.createElement('div'); actions.style.display='flex'; actions.style.gap='6px';
+        const editBtn = document.createElement('button'); editBtn.textContent = '편집'; editBtn.className='modal-action'; editBtn.onclick = () => editSavedName(idx);
+        const delBtn = document.createElement('button'); delBtn.textContent = '삭제'; delBtn.className='modal-action'; delBtn.onclick = () => { if(confirm('삭제하시겠습니까?')) { deleteSavedName(idx); } };
+        actions.appendChild(editBtn); actions.appendChild(delBtn);
+        row.appendChild(label); row.appendChild(actions);
+        container.appendChild(row);
+    });
+}
+
+function editSavedName(idx) {
+    const list = loadSavedNames();
+    const name = list[idx];
+    const newName = prompt('이름을 편집하세요:', name);
+    if (newName === null) return; // cancel
+    const trimmed = (newName || '').trim();
+    if (!trimmed) return alert('이름은 비어 있을 수 없습니다.');
+    list[idx] = trimmed;
+    saveSavedNames(list);
+    renderSavedNamesList();
+}
+
+function deleteSavedName(idx) {
+    const list = loadSavedNames();
+    list.splice(idx,1);
+    saveSavedNames(list);
+    renderSavedNamesList();
+}
+
 function applyPlayerNames() {
     try {
         const n1 = document.getElementById('playerReg1') ? document.getElementById('playerReg1').value.trim() : '';
@@ -148,6 +269,9 @@ function applyPlayerNames() {
         gameState.player1Name = n1 || 'Player 1';
         gameState.player2Name = n2 || 'Player 2';
         savePlayerNamesToStorage();
+        // save into pre-registered names pool
+        if (n1) addSavedName(n1);
+        if (n2) addSavedName(n2);
         updateScoreboard();
     } catch (e) { console.warn('applyPlayerNames failed', e); }
 }
@@ -177,6 +301,22 @@ function showHistory() {
     if (modal) modal.classList.add('active');
 }
 
+function toggleGameMenu() {
+    const menu = document.getElementById('gameMenu');
+    if (!menu) return;
+    if (menu.style.display === 'none' || menu.style.display === '') menu.style.display = 'block';
+    else menu.style.display = 'none';
+}
+
+function openPlayerRegistrationFromMenu() {
+    toggleGameMenu();
+    showScreen('gameSettings');
+    setTimeout(() => {
+        const el = document.getElementById('playerReg1');
+        if (el) el.focus();
+    }, 200);
+}
+
 function closeHistoryModal() {
     const modal = document.getElementById('historyModal');
     if (modal) modal.classList.remove('active');
@@ -186,23 +326,102 @@ function renderHistoryList() {
     const container = document.getElementById('historyList');
     if (!container) return;
     container.innerHTML = '';
-    if (!gameState.matchHistory || gameState.matchHistory.length === 0) {
+    const entries = gameState._historyToRender || (gameState.matchHistory || []).slice().reverse();
+    if (!entries || entries.length === 0) {
         container.innerHTML = '<div style="padding:0.5rem;color:#666">기록이 없습니다.</div>';
         return;
     }
     const table = document.createElement('table');
     table.style.width = '100%';
     table.style.borderCollapse = 'collapse';
-    (gameState.matchHistory || []).slice().reverse().forEach(e => {
+    const full = gameState.matchHistory || [];
+    entries.forEach((e, i) => {
         const tr = document.createElement('tr');
         tr.style.borderBottom = '1px solid #eee';
+        tr.style.cursor = 'pointer';
+        tr.style.padding = '0';
         const td = document.createElement('td');
         td.style.padding = '0.45rem';
         td.innerHTML = `<strong>${e.date} ${e.time}</strong><br/>${e.game}<br/>${e.player1} ${e.score1} - ${e.player2} ${e.score2} (Set ${e.set})${e.memo ? '<br/><em>' + e.memo + '</em>' : ''}`;
+        // compute original index in matchHistory
+        const origIndex = full.length - 1 - i;
+        tr.dataset.idx = String(origIndex);
         tr.appendChild(td);
+        tr.addEventListener('click', () => openHistoryDetail(origIndex));
         table.appendChild(tr);
     });
     container.appendChild(table);
+}
+
+function applyHistoryFilters() {
+    const dateVal = document.getElementById('historyFilterDate') ? document.getElementById('historyFilterDate').value : '';
+    const playerVal = document.getElementById('historyFilterPlayer') ? (document.getElementById('historyFilterPlayer').value || '').trim().toLowerCase() : '';
+    const gameVal = document.getElementById('historyFilterGame') ? (document.getElementById('historyFilterGame').value || '').trim().toLowerCase() : '';
+    const list = (gameState.matchHistory || []).filter(e => {
+        let ok = true;
+        if (dateVal) ok = ok && (e.date === new Date(dateVal).toLocaleDateString('ko-KR'));
+        if (playerVal) ok = ok && ( (e.player1 && e.player1.toLowerCase().includes(playerVal)) || (e.player2 && e.player2.toLowerCase().includes(playerVal)) );
+        if (gameVal) ok = ok && (e.game && e.game.toLowerCase().includes(gameVal));
+        return ok;
+    });
+    // store reversed list to render with consistent indexing
+    gameState._historyToRender = list.slice().reverse();
+    renderHistoryList();
+}
+
+function clearHistoryFilters() {
+    if (document.getElementById('historyFilterDate')) document.getElementById('historyFilterDate').value = '';
+    if (document.getElementById('historyFilterPlayer')) document.getElementById('historyFilterPlayer').value = '';
+    if (document.getElementById('historyFilterGame')) document.getElementById('historyFilterGame').value = '';
+    gameState._historyToRender = null;
+    renderHistoryList();
+}
+
+function openHistoryDetail(origIndex) {
+    const rec = (gameState.matchHistory || [])[origIndex];
+    if (!rec) return alert('레코드를 찾을 수 없습니다');
+    document.getElementById('detailDate').value = rec.date || '';
+    document.getElementById('detailTime').value = rec.time || '';
+    document.getElementById('detailGame').value = rec.game || '';
+    document.getElementById('detailP1').value = rec.player1 || '';
+    document.getElementById('detailS1').value = rec.score1 || '';
+    document.getElementById('detailP2').value = rec.player2 || '';
+    document.getElementById('detailS2').value = rec.score2 || '';
+    document.getElementById('detailSet').value = rec.set || '';
+    document.getElementById('detailMemo').value = rec.memo || '';
+    document.getElementById('historyDetailModal').dataset.idx = String(origIndex);
+    const modal = document.getElementById('historyDetailModal'); if (modal) modal.classList.add('active');
+}
+
+function closeHistoryDetail() {
+    const modal = document.getElementById('historyDetailModal'); if (modal) modal.classList.remove('active');
+}
+
+function saveHistoryDetail() {
+    const idx = parseInt(document.getElementById('historyDetailModal').dataset.idx,10);
+    if (isNaN(idx)) return;
+    const rec = (gameState.matchHistory || [])[idx]; if (!rec) return;
+    rec.time = document.getElementById('detailTime').value;
+    rec.game = document.getElementById('detailGame').value;
+    rec.player1 = document.getElementById('detailP1').value;
+    rec.score1 = parseInt(document.getElementById('detailS1').value,10) || 0;
+    rec.player2 = document.getElementById('detailP2').value;
+    rec.score2 = parseInt(document.getElementById('detailS2').value,10) || 0;
+    rec.set = parseInt(document.getElementById('detailSet').value,10) || rec.set;
+    rec.memo = document.getElementById('detailMemo').value;
+    saveHistoryToStorage();
+    closeHistoryDetail();
+    clearHistoryFilters();
+}
+
+function deleteHistoryDetail() {
+    if (!confirm('이 기록을 삭제하시겠습니까?')) return;
+    const idx = parseInt(document.getElementById('historyDetailModal').dataset.idx,10);
+    if (isNaN(idx)) return;
+    (gameState.matchHistory || []).splice(idx,1);
+    saveHistoryToStorage();
+    closeHistoryDetail();
+    renderHistoryList();
 }
 
 function clearHistory() {
@@ -774,6 +993,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 앱 초기화
     initializeApp();
+
+    // load stored player names and history and saved names
+    loadPlayerNamesFromStorage();
+    loadHistoryFromStorage();
+    // ensure saved names exists (no-op if absent)
+    loadSavedNames();
 
     // 플레이어 1 점수 터치
     const player1Score = document.getElementById('player1Score');

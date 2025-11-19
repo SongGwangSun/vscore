@@ -21,6 +21,16 @@
     color: #667eea;
     font-style: italic;
 }
+
+/* History detail modal inputs styling */
+#historyDetailModal .modal-content input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Saved names manager list styling */
+#savedNamesList div { display:block; }
+#savedNamesList .modal-action { padding:0.35rem 0.6rem; font-size:0.95rem; }
 * {
     margin: 0;
     padding: 0;
@@ -116,6 +126,49 @@ body.mobile {
     min-height: 140px;
     display: flex;
     flex-direction: column;
+
+/* make gameSettings scrollable and inputs match voice select */
+#gameSettings {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    max-height: 100vh;
+    padding-bottom: 24px;
+}
+
+.voice-select {
+    width: 220px;
+    padding: 0.8rem 1.2rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    background-color: #fff;
+    color: #333;
+    cursor: pointer;
+}
+
+/* small saved-names dropdown */
+.saved-names-dropdown {
+    position: absolute;
+    background: #fff;
+    border: 1px solid #e6e6e6;
+    box-shadow: 0 8px 20px rgba(16,24,40,0.08);
+    border-radius: 8px;
+    z-index: 1300;
+    min-width: 160px;
+    max-height: 240px;
+    overflow:auto;
+}
+.saved-names-dropdown button {
+    display:block;
+    width:100%;
+    text-align:left;
+    padding:0.45rem 0.6rem;
+    border:none;
+    background:none;
+    cursor:pointer;
+}
+.saved-names-dropdown button:hover { background:#f5f7ff; }
     align-items: center;
     justify-content: center;
     touch-action: manipulation;

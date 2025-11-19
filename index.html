@@ -18,7 +18,15 @@
 <body>
     <!-- 게임 선택 화면 -->
     <div id="gameSelection" class="screen">
-        <h1>Sport Score Board </h1>
+        <div style="display:flex;align-items:center;gap:0.5rem;width:100%;justify-content:space-between;">
+            <h1 style="margin:0;">Sport Score Board</h1>
+            <button id="gameMenuBtn" class="control-btn" style="width:auto;height:auto;padding:8px 10px;border-radius:10px;" onclick="toggleGameMenu()" title="메뉴(Menu)">☰</button>
+        </div>
+        <div id="gameMenu" style="display:none;position:absolute;top:56px;right:20px;background:#fff;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.12);padding:8px;z-index:1200;">
+            <button class="modal-action" style="display:block;width:100%;margin-bottom:6px;" onclick="openPlayerRegistrationFromMenu()">선수 등록(Player Reg)</button>
+            <button class="modal-action" style="display:block;width:100%;margin-bottom:6px;" onclick="openSavedNamesManager();toggleGameMenu()">선수 관리(Manage Players)</button>
+            <button class="modal-action" style="display:block;width:100%;" onclick="showHistory();toggleGameMenu()">기록 보기(History)</button>
+        </div>
         <div class="game-buttons">
             <button class="game-btn" onclick="selectGame('badminton')" type="button">
                 <div class="game-icon">🏸</div>
@@ -41,7 +49,10 @@
 
     <!-- 게임 설정 화면 -->
     <div id="gameSettings" class="screen">
-        <h2 id="selectedGameTitle">게임 설정(Setting)</h2>
+        <div style="display:flex;align-items:center;gap:8px;">
+            <button class="control-btn" onclick="showGameSelection()" type="button" title="이전(Back)" style="width:auto;height:auto;padding:6px 8px;border-radius:8px;">←</button>
+            <h2 id="selectedGameTitle" style="margin:0;">게임 설정(Setting)</h2>
+        </div>
         <div class="settings-container">
             <div class="setting-group">
                 <label for="winScoreRange">승리 점수(WinScore): <span id="winScoreValue">11</span>점(Point)</label>
@@ -91,15 +102,21 @@
             <div class="setting-group">
                 <label for="playerReg1">선수 등록(Player Registration):</label>
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
-                    <input type="text" id="playerReg1" placeholder="선수1 이름 (Player 1 name)" aria-label="Player 1 name" />
-                    <input type="text" id="playerReg2" placeholder="선수2 이름 (Player 2 name)" aria-label="Player 2 name" />
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <input type="text" id="playerReg1" class="voice-select" placeholder="선수1 이름 (Player 1 name)" aria-label="Player 1 name" />
+                        <button class="control-btn" style="width:auto;height:auto;padding:6px 8px;border-radius:8px;" onclick="showSavedNamesPicker('playerReg1', this)">선택</button>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <input type="text" id="playerReg2" class="voice-select" placeholder="선수2 이름 (Player 2 name)" aria-label="Player 2 name" />
+                        <button class="control-btn" style="width:auto;height:auto;padding:6px 8px;border-radius:8px;" onclick="showSavedNamesPicker('playerReg2', this)">선택</button>
+                    </div>
                     <button class="start-btn" style="padding:0.5rem 1rem;" onclick="applyPlayerNames()" type="button">적용(Apply)</button>
                 </div>
             </div>
 
             <div class="setting-group">
                 <label for="setMemoInput">세트 메모(Memo):</label>
-                <input type="text" id="setMemoInput" placeholder="메모를 입력하세요 (optional)" aria-label="Set memo" />
+                <input type="text" id="setMemoInput" class="voice-select" placeholder="메모를 입력하세요 (optional)" aria-label="Set memo" />
             </div>
 
             <div class="setting-group">
@@ -173,11 +190,56 @@
         <div class="modal-content">
             <button class="modal-close" onclick="closeHistoryModal()" aria-label="닫기(Close)">&times;</button>
             <h2>경기 기록(History)</h2>
-            <div id="historyList" style="max-height:50vh;overflow:auto;text-align:left;margin-top:0.5rem;padding:0.5rem;"></div>
+            <div style="display:flex;gap:0.5rem;margin:0.5rem 0 0.75rem 0;flex-wrap:wrap;align-items:center;">
+                <input type="date" id="historyFilterDate" style="padding:0.5rem;border-radius:6px;border:1px solid #e6e6e6;" />
+                <input type="text" id="historyFilterPlayer" placeholder="선수 이름(Player)" style="padding:0.5rem;border-radius:6px;border:1px solid #e6e6e6;min-width:140px;" />
+                <input type="text" id="historyFilterGame" placeholder="경기명(Game)" style="padding:0.5rem;border-radius:6px;border:1px solid #e6e6e6;min-width:140px;" />
+                <button class="modal-action" onclick="applyHistoryFilters()">필터(Filter)</button>
+                <button class="modal-action" onclick="clearHistoryFilters()">초기화(Clear)</button>
+            </div>
+            <div id="historyList" style="max-height:48vh;overflow:auto;text-align:left;margin-top:0.5rem;padding:0.5rem;"></div>
             <div class="modal-footer" style="display:flex;gap:0.5rem;justify-content:center;align-items:center;margin-top:1rem;">
                 <button class="modal-action" onclick="clearHistory()">기록 삭제(Clear)</button>
                 <button class="modal-action" onclick="exportHistory()">내보내기(Export)</button>
                 <button class="modal-action" onclick="closeHistoryModal()">닫기(Close)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Names Manager Modal -->
+    <div id="savedNamesModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeSavedNamesManager()" aria-label="닫기(Close)">&times;</button>
+            <h2>선수 목록(Manage Players)</h2>
+            <div style="display:flex;gap:0.5rem;margin:0.5rem 0 0.5rem 0;align-items:center;">
+                <input type="text" id="newSavedName" placeholder="이름 입력(Add name)" style="flex:1;padding:0.5rem;border-radius:6px;border:1px solid #e6e6e6;" />
+                <button class="modal-action" onclick="addNewSavedName()">추가(Add)</button>
+            </div>
+            <div id="savedNamesList" style="max-height:50vh;overflow:auto;margin-top:0.5rem;padding:0.25rem;"></div>
+            <div class="modal-footer" style="display:flex;gap:0.5rem;justify-content:center;align-items:center;margin-top:1rem;">
+                <button class="modal-action" onclick="closeSavedNamesManager()">닫기(Close)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Detail Modal -->
+    <div id="historyDetailModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeHistoryDetail()" aria-label="닫기(Close)">&times;</button>
+            <h2>기록 상세(Detail)</h2>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                <div><label>일자(Date): </label><input id="detailDate" readonly style="padding:0.4rem;border-radius:6px;border:1px solid #e6e6e6;" /></div>
+                <div><label>시간(Time): </label><input id="detailTime" style="padding:0.4rem;border-radius:6px;border:1px solid #e6e6e6;" /></div>
+                <div><label>경기(Game): </label><input id="detailGame" style="padding:0.4rem;border-radius:6px;border:1px solid #e6e6e6;" /></div>
+                <div style="display:flex;gap:0.5rem;"><input id="detailP1" style="flex:1;padding:0.4rem;border-radius:6px;border:1px solid #e6e6e6;" /><input id="detailS1" style="width:80px;padding:0.4rem;border-radius:6px;border:1px solid #e6e6e6;" /></div>
+                <div style="display:flex;gap:0.5rem;"><input id="detailP2" style="flex:1;padding:0.4rem;border-radius:6px;border:1px solid #e6e6e6;" /><input id="detailS2" style="width:80px;padding:0.4rem;border-radius:6px;border:1px solid #e6e6e6;" /></div>
+                <div><label>세트 번호(Set): </label><input id="detailSet" type="number" min="1" style="width:80px;padding:0.4rem;border-radius:6px;border:1px solid #e6e6e6;" /></div>
+                <div><label>메모(Memo): </label><input id="detailMemo" style="padding:0.4rem;border-radius:6px;border:1px solid #e6e6e6;" /></div>
+            </div>
+            <div class="modal-footer" style="display:flex;gap:0.5rem;justify-content:center;align-items:center;margin-top:1rem;">
+                <button class="modal-action" onclick="saveHistoryDetail()">저장(Save)</button>
+                <button class="modal-action" onclick="deleteHistoryDetail()">삭제(Delete)</button>
+                <button class="modal-action" onclick="closeHistoryDetail()">닫기(Close)</button>
             </div>
         </div>
     </div>
