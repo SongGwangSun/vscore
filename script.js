@@ -308,6 +308,11 @@ function showHistory() {
     if (modal) modal.classList.add('active');
 }
 
+function voiceLanguage() {
+    const modal = document.getElementById('voiceLanguage');
+    if (modal) modal.classList.add('active');
+}
+
 function toggleGameMenu() {
     const menu = document.getElementById('gameMenu');
     if (!menu) return;
