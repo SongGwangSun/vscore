@@ -320,7 +320,6 @@ function closevoiceLanguage() {
     }
 }
 
-
 function toggleGameMenu() {
     const menu = document.getElementById('gameMenu');
     if (!menu) return;
