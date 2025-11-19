@@ -61,12 +61,20 @@
             </div>
 
             <div class="setting-group">
-                <label>세트 수(Set):</label>
-                <div class="radio-group">
-                    <input type="radio" id="sets3" name="totalSets" value="3" checked>
-                    <label for="sets3">3세트(Set)</label>
-                    <input type="radio" id="sets5" name="totalSets" value="5">
-                    <label for="sets5">5세트(Set)</label>
+                <label for="totalSetsRange">세트 수(Set): <span id="totalSetsValue">3</span>세트(Set)</label>
+                <input
+                    type="range"
+                    id="totalSetsRange"
+                    name="totalSets"
+                    min="1"
+                    max="7"
+                    step="2"
+                    value="3"
+                    oninput="document.getElementById('totalSetsValue').textContent = this.value"
+                    aria-label="세트 수 설정(Set Number Setting)"
+                />
+                <div class="range-labels" aria-hidden="true" style="display:flex;justify-content:space-between;font-size:0.85rem;margin-top:4px;">
+                    <span>1</span><span>3</span><span>5</span><span>7</span>
                 </div>
             </div>
 
@@ -82,7 +90,7 @@
 
             <div class="setting-group">
                 <label for="voiceLangSelect">음성 언어(Voice):</label>
-                <select id="voiceLangSelect" aria-label="음성 언어 선택(Speech Language)">
+                <select id="voiceLangSelect" class="voice-select" aria-label="음성 언어 선택(Speech Language)">
                     <option value="ko-KR">한국어 (한국어)</option>
                     <option value="en-US">English (US)</option>
                 </select>

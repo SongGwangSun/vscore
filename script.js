@@ -147,15 +147,15 @@ function startGame() {
     const winScoreRange = document.getElementById('winScoreRange');
     gameState.winScore = winScoreRange ? parseInt(winScoreRange.value, 10) : 11;
 
-    const totalSetsInput = document.querySelector('input[name="totalSets"]:checked');
+    const totalSetsRange = document.getElementById('totalSetsRange');
     const matchTypeInput = document.querySelector('input[name="matchType"]:checked');
 
-    if (!winScoreRange || !totalSetsInput) {
+    if (!winScoreRange || !totalSetsRange) {
         alert('게임 설정을 선택해주세요. (Please select game settings.)');
         return;
     }
 
-    gameState.totalSets = parseInt(totalSetsInput.value);
+    gameState.totalSets = parseInt(totalSetsRange.value);
     gameState.currentSet = 1;
     gameState.player1Score = 0;
     gameState.player2Score = 0;
