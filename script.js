@@ -363,12 +363,12 @@ function renderHistoryList() {
 function applyHistoryFilters() {
     const dateVal = document.getElementById('historyFilterDate') ? document.getElementById('historyFilterDate').value : '';
     const playerVal = document.getElementById('historyFilterPlayer') ? (document.getElementById('historyFilterPlayer').value || '').trim().toLowerCase() : '';
-    const gameVal = document.getElementById('historyFilterGame') ? (document.getElementById('historyFilterGame').value || '').trim().toLowerCase() : '';
+    const gameVal = document.getElementById('historyFilterGame') ? (document.getElementById('historyFilterGame').value || '').trim() : '';
     const list = (gameState.matchHistory || []).filter(e => {
         let ok = true;
         if (dateVal) ok = ok && (e.date === new Date(dateVal).toLocaleDateString('ko-KR'));
         if (playerVal) ok = ok && ( (e.player1 && e.player1.toLowerCase().includes(playerVal)) || (e.player2 && e.player2.toLowerCase().includes(playerVal)) );
-        if (gameVal) ok = ok && (e.game && e.game.toLowerCase().includes(gameVal));
+        if (gameVal) ok = ok && (e.game === gameVal);
         return ok;
     });
     // store reversed list to render with consistent indexing
@@ -817,11 +817,16 @@ function endSet(winner) {
 // 게임 종료
 function endGame() {
     const winner = gameState.player1Sets > gameState.player2Sets ? 1 : 2;
-    const winnerText = `Player ${winner} 승리(Winner)!`;
+    const winnerName = winner === 1 ? gameState.player1Name : gameState.player2Name;
+    const winnerText = `${winnerName} 승리(Winner)!`;
     const finalScore = `${gameState.player1Sets} - ${gameState.player2Sets}`;
 
     document.getElementById('winnerText').textContent = winnerText;
-    document.getElementById('finalScore').textContent = finalScore;
+    document.getElementById('finalScore').textContent = gameState.player1Sets;
+    document.getElementById('finalScore2').textContent = gameState.player2Sets;
+    document.getElementById('finalScoreSets').textContent = finalScore + ' 세트(Sets)';
+    document.getElementById('player1DisplayName').textContent = gameState.player1Name;
+    document.getElementById('player2DisplayName').textContent = gameState.player2Name;
 
     speakNarration('gameEnd', { winnerText });
 
