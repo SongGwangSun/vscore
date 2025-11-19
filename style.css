@@ -402,7 +402,41 @@ body.mobile {
     opacity: 0.9;
 }
 
+/* Mobile tweaks: make control/back and player-select buttons larger and touch-friendly */
+@media (max-width: 480px) {
+    .control-btn {
+        padding: 0.6rem 1rem !important;
+        border-radius: 10px !important;
+        min-width: 96px !important;
+        max-width: none !important;
+        height: auto !important;
+        font-size: 1.05rem !important;
+    }
 
+    /* ensure small inline-styled buttons inside settings align nicely */
+    #gameSettings .setting-group div > div .control-btn,
+    #gameSettings > div > .control-btn {
+        align-self: center;
+    }
+
+    /* top menu button slightly larger and rectangular on phones */
+    #gameMenuBtn.control-btn {
+        padding: 0.5rem 0.8rem !important;
+        min-width: 56px !important;
+        border-radius: 10px !important;
+    }
+
+    /* reduce gaps and slightly shrink game tiles so layout fits mobile neatly */
+    .game-buttons {
+        gap: 0.9rem;
+    }
+    .game-btn {
+        min-width: 120px;
+        min-height: 120px;
+        padding: 1.2rem;
+        border-radius: 16px;
+    }
+}
 
 .scoreboard-container {
     display: flex;
@@ -523,6 +557,37 @@ body.mobile {
 
 .winner-display {
     margin: 2rem 0;
+}
+
+/* Scoreboard topbar styles */
+.score-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1300;
+}
+.score-topbar .scoreboard-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    text-align: center;
+}
+.score-topbar .score-top-left,
+.score-topbar .score-top-right {
+    width: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 480px) {
+    .score-topbar .scoreboard-title { font-size: 1rem; }
+    /* ensure topbar buttons don't overlap content */
+    #scoreboard { padding-top: 56px; }
 }
 
 .winner-text {

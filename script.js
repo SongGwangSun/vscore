@@ -569,6 +569,16 @@ function showScreen(screenId) {
         console.error('Screen not found:', screenId);
     }
 
+    // update scoreboard top title when showing scoreboard
+    if (screenId === 'scoreboard') {
+        try {
+            const titleEl = document.getElementById('scoreboardGameTitle');
+            if (titleEl) {
+                titleEl.textContent = getGameDisplayName(gameState.selectedGame) || '경기';
+            }
+        } catch (e) { console.warn('update scoreboard title failed', e); }
+    }
+
     // 모바일에서 전체화면 설정
     if (screenId === 'scoreboard' || screenId === 'gameSettings') {
         document.body.classList.add('fullscreen');

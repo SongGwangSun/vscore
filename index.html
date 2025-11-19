@@ -128,6 +128,17 @@
 
     <!-- 점수판 화면 -->
     <div id="scoreboard" class="screen">
+        <div class="score-topbar">
+            <div class="score-top-left">
+                <button class="control-btn" onclick="showGameSelection()" type="button" title="홈(Home)">🏠</button>
+            </div>
+            <div class="score-top-center">
+                <div id="scoreboardGameTitle" class="scoreboard-title">게임</div>
+            </div>
+            <div class="score-top-right">
+                <button id="scoreboardMenuBtn" class="control-btn" onclick="toggleGameMenu()" type="button" title="메뉴(Menu)">☰</button>
+            </div>
+        </div>
         <!-- 하단 버튼들 -->
         <div class="control-buttons">
             <button class="control-btn" onclick="showGameSelection()" type="button" title="새 게임(New game)">🏠</button>
