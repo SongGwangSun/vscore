@@ -518,7 +518,7 @@ body.mobile {
     font-size: 1.5rem;
     touch-action: manipulation;
     flex: 1;
-    min-width: 60px;
+    min-width: 80px;
     max-width: 80px;
     height: 60px;
     display: flex;
@@ -557,37 +557,6 @@ body.mobile {
 
 .winner-display {
     margin: 2rem 0;
-}
-
-/* Scoreboard topbar styles */
-.score-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 0.6rem 0.8rem;
-    box-sizing: border-box;
-    position: relative;
-    z-index: 1300;
-}
-.score-topbar .scoreboard-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #fff;
-    text-align: center;
-}
-.score-topbar .score-top-left,
-.score-topbar .score-top-right {
-    width: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-@media (max-width: 480px) {
-    .score-topbar .scoreboard-title { font-size: 1rem; }
-    /* ensure topbar buttons don't overlap content */
-    #scoreboard { padding-top: 56px; }
 }
 
 .winner-text {

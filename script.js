@@ -308,7 +308,14 @@ function showHistory() {
     if (modal) modal.classList.add('active');
 }
 
+function renderVoiceLanguage() {
+    const container = document.getElementById('voiceLanguage');
+    if (!container) return;
+    container.innerHTML = '';
+}
+
 function voiceLanguage() {
+    renderVoiceLanguage();
     const modal = document.getElementById('voiceLanguage');
     if (modal) modal.classList.add('active');
 }
@@ -567,16 +574,6 @@ function showScreen(screenId) {
         console.log('Screen activated:', screenId);
     } else {
         console.error('Screen not found:', screenId);
-    }
-
-    // update scoreboard top title when showing scoreboard
-    if (screenId === 'scoreboard') {
-        try {
-            const titleEl = document.getElementById('scoreboardGameTitle');
-            if (titleEl) {
-                titleEl.textContent = getGameDisplayName(gameState.selectedGame) || '경기';
-            }
-        } catch (e) { console.warn('update scoreboard title failed', e); }
     }
 
     // 모바일에서 전체화면 설정
