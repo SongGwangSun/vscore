@@ -164,45 +164,52 @@ function addSavedName(name) {
     }
 }
 
-function showSavedNamesPicker(inputId, btn) {
-    // remove existing dropdowns
-    document.querySelectorAll('.saved-names-dropdown').forEach(d => d.remove());
-
+function openPlayerNamesPicker(inputId) {
     const names = loadSavedNames();
     if (!names || names.length === 0) {
         alert('저장된 선수 이름이 없습니다. 선수 등록 후 사용하세요.');
         return;
     }
+    document.getElementById('playerNamesPickerModal').dataset.inputId = inputId;
+    renderPlayerNamesList();
+    const modal = document.getElementById('playerNamesPickerModal');
+    if (modal) modal.classList.add('active');
+}
 
-    const rect = btn.getBoundingClientRect();
-    const dropdown = document.createElement('div');
-    dropdown.className = 'saved-names-dropdown';
-    dropdown.style.top = (rect.bottom + window.scrollY + 6) + 'px';
-    dropdown.style.left = (rect.left + window.scrollX) + 'px';
+function closePlayerNamesPicker() {
+    const modal = document.getElementById('playerNamesPickerModal');
+    if (modal) modal.classList.remove('active');
+}
 
+function renderPlayerNamesList() {
+    const container = document.getElementById('playerNamesList');
+    if (!container) return;
+    container.innerHTML = '';
+    const names = loadSavedNames();
+    if (!names || names.length === 0) { container.innerHTML = '<div style="color:#666;padding:0.5rem;">저장된 이름이 없습니다.</div>'; return; }
     names.forEach(n => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.textContent = n;
-        b.addEventListener('click', () => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = n;
+        btn.style.display = 'block';
+        btn.style.width = '100%';
+        btn.style.textAlign = 'left';
+        btn.style.padding = '0.6rem';
+        btn.style.border = 'none';
+        btn.style.background = 'none';
+        btn.style.cursor = 'pointer';
+        btn.style.borderBottom = '1px solid #e6e6e6';
+        btn.style.transition = 'background 0.2s';
+        btn.addEventListener('mouseenter', () => btn.style.background = '#e8f0ff');
+        btn.addEventListener('mouseleave', () => btn.style.background = 'none');
+        btn.addEventListener('click', () => {
+            const inputId = document.getElementById('playerNamesPickerModal').dataset.inputId;
             const input = document.getElementById(inputId);
             if (input) input.value = n;
-            dropdown.remove();
+            closePlayerNamesPicker();
         });
-        dropdown.appendChild(b);
+        container.appendChild(btn);
     });
-
-    // click outside to close
-    setTimeout(() => {
-        document.addEventListener('click', function onDocClick(ev) {
-            if (!dropdown.contains(ev.target) && ev.target !== btn) {
-                dropdown.remove();
-                document.removeEventListener('click', onDocClick);
-            }
-        });
-    }, 10);
-
-    document.body.appendChild(dropdown);
 }
 
 function addNewSavedName() {

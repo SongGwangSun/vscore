@@ -104,11 +104,11 @@
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
                     <div style="display:flex;align-items:center;gap:6px;">
                         <input type="text" id="playerReg1" class="voice-select" placeholder="선수1 이름 (Player 1 name)" aria-label="Player 1 name" />
-                        <button class="control-btn" style="width:auto;height:auto;padding:6px 8px;border-radius:8px;" onclick="showSavedNamesPicker('playerReg1', this)">선택</button>
+                        <button class="control-btn" style="width:auto;height:auto;padding:6px 8px;border-radius:8px;" onclick="openPlayerNamesPicker('playerReg1')">선택</button>
                     </div>
                     <div style="display:flex;align-items:center;gap:6px;">
                         <input type="text" id="playerReg2" class="voice-select" placeholder="선수2 이름 (Player 2 name)" aria-label="Player 2 name" />
-                        <button class="control-btn" style="width:auto;height:auto;padding:6px 8px;border-radius:8px;" onclick="showSavedNamesPicker('playerReg2', this)">선택</button>
+                        <button class="control-btn" style="width:auto;height:auto;padding:6px 8px;border-radius:8px;" onclick="openPlayerNamesPicker('playerReg2')">선택</button>
                     </div>
                     <button class="start-btn" style="padding:0.5rem 1rem;" onclick="applyPlayerNames()" type="button">적용(Apply)</button>
                 </div>
@@ -240,6 +240,18 @@
                 <button class="modal-action" onclick="saveHistoryDetail()">저장(Save)</button>
                 <button class="modal-action" onclick="deleteHistoryDetail()">삭제(Delete)</button>
                 <button class="modal-action" onclick="closeHistoryDetail()">닫기(Close)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player Names Picker Modal (Listbox) -->
+    <div id="playerNamesPickerModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closePlayerNamesPicker()" aria-label="닫기(Close)">&times;</button>
+            <h2>선수 선택(Select Player)</h2>
+            <div id="playerNamesList" style="max-height:50vh;overflow:auto;margin-top:0.5rem;padding:0.25rem;border:1px solid #e6e6e6;border-radius:6px;background:#fafafa;"></div>
+            <div class="modal-footer" style="display:flex;gap:0.5rem;justify-content:center;align-items:center;margin-top:1rem;">
+                <button class="modal-action" onclick="closePlayerNamesPicker()">닫기(Close)</button>
             </div>
         </div>
     </div>

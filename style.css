@@ -200,6 +200,10 @@ body.mobile {
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     max-width: 500px;
     width: 90%;
+    overflow-y: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-height: 90vh;
 }
 
 #selectedGameTitle {
@@ -207,6 +211,26 @@ body.mobile {
     margin-bottom: 2rem;
     color: #333;
     font-size: 2rem;
+}
+
+/* Player Names Picker Modal */
+#playerNamesPickerModal .modal-content {
+    max-width: 400px;
+    width: 98vw;
+}
+
+#playerNamesList {
+    display: flex;
+    flex-direction: column;
+}
+
+#playerNamesList button {
+    font-size: 1rem;
+    color: #333;
+}
+
+#playerNamesList button:last-child {
+    border-bottom: none;
 }
 
 .settings-container {
