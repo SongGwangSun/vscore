@@ -89,6 +89,20 @@
             </div>
 
             <div class="setting-group">
+                <label for="playerReg1">선수 등록(Player Registration):</label>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+                    <input type="text" id="playerReg1" placeholder="선수1 이름 (Player 1 name)" aria-label="Player 1 name" />
+                    <input type="text" id="playerReg2" placeholder="선수2 이름 (Player 2 name)" aria-label="Player 2 name" />
+                    <button class="start-btn" style="padding:0.5rem 1rem;" onclick="applyPlayerNames()" type="button">적용(Apply)</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label for="setMemoInput">세트 메모(Memo):</label>
+                <input type="text" id="setMemoInput" placeholder="메모를 입력하세요 (optional)" aria-label="Set memo" />
+            </div>
+
+            <div class="setting-group">
                 <label for="voiceLangSelect">음성 언어(Voice):</label>
                 <select id="voiceLangSelect" class="voice-select" aria-label="음성 언어 선택(Speech Language)">
                     <option value="ko-KR">한국어 (한국어)</option>
@@ -108,6 +122,7 @@
             <button class="control-btn" onclick="resetSet()" type="button" title="세트 리셋(Set reset)">🔄</button>
             <button class="control-btn" onclick="undoLastScore()" type="button" title="실수 수정(Score undo)">↩️</button>
             <button class="control-btn" onclick="switchCourt()" type="button" title="코트 교체(Change court)">🔃</button>
+            <button class="control-btn" onclick="showHistory()" type="button" title="History">📜</button>
             <button class="control-btn" onclick="showAbout()" type="button" title="About">ℹ️</button>
         </div>
         <div class="scoreboard-container">
@@ -149,6 +164,20 @@
             <p>문의(Inquiry): <a href="mailto:songgs33@gmail.com">songgs33@gmail.com</a></p>
             <div class="modal-footer">
                 <button class="modal-action" onclick="closeAboutModal()">확인(OK)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History 모달 -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeHistoryModal()" aria-label="닫기(Close)">&times;</button>
+            <h2>경기 기록(History)</h2>
+            <div id="historyList" style="max-height:50vh;overflow:auto;text-align:left;margin-top:0.5rem;padding:0.5rem;"></div>
+            <div class="modal-footer" style="display:flex;gap:0.5rem;justify-content:center;align-items:center;margin-top:1rem;">
+                <button class="modal-action" onclick="clearHistory()">기록 삭제(Clear)</button>
+                <button class="modal-action" onclick="exportHistory()">내보내기(Export)</button>
+                <button class="modal-action" onclick="closeHistoryModal()">닫기(Close)</button>
             </div>
         </div>
     </div>

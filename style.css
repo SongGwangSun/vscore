@@ -1,3 +1,26 @@
+/* History Modal Styles */
+#historyModal .modal-content {
+    max-width: 480px;
+    width: 98vw;
+    padding: 1.2rem 1rem 1rem 1rem;
+}
+#historyList table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1rem;
+}
+#historyList td {
+    border-bottom: 1px solid #eee;
+    padding: 0.45rem;
+    word-break: break-all;
+}
+#historyList tr:last-child td {
+    border-bottom: none;
+}
+#historyList em {
+    color: #667eea;
+    font-style: italic;
+}
 * {
     margin: 0;
     padding: 0;

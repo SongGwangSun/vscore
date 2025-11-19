@@ -11,6 +11,9 @@ let gameState = {
     player1Sets: 0,
     player2Sets: 0,
     scoreHistory: [],
+    matchHistory: [],
+    player1Name: 'Player 1',
+    player2Name: 'Player 2',
     lastTapTime: 0,
     touchStartTime: 0,
     touchEndTime: 0
@@ -113,6 +116,122 @@ function speakServePosition(serverPlayer) {
     const sideKey = determineServeSide(serverPlayer);
     const sideLocalized = getSideLocalized(sideKey);
     speakNarration('servePosition', { player: serverPlayer, side: sideLocalized });
+}
+
+// --- Player names & History utilities ---
+function savePlayerNamesToStorage() {
+    try {
+        localStorage.setItem('vscore_players', JSON.stringify({ p1: gameState.player1Name, p2: gameState.player2Name }));
+    } catch (e) { console.warn('savePlayerNamesToStorage failed', e); }
+}
+
+function loadPlayerNamesFromStorage() {
+    try {
+        const s = localStorage.getItem('vscore_players');
+        if (s) {
+            const obj = JSON.parse(s);
+            gameState.player1Name = obj.p1 || gameState.player1Name;
+            gameState.player2Name = obj.p2 || gameState.player2Name;
+            const el1 = document.getElementById('playerReg1');
+            const el2 = document.getElementById('playerReg2');
+            if (el1) el1.value = gameState.player1Name;
+            if (el2) el2.value = gameState.player2Name;
+            updateScoreboard();
+        }
+    } catch (e) { console.warn('loadPlayerNamesFromStorage failed', e); }
+}
+
+function applyPlayerNames() {
+    try {
+        const n1 = document.getElementById('playerReg1') ? document.getElementById('playerReg1').value.trim() : '';
+        const n2 = document.getElementById('playerReg2') ? document.getElementById('playerReg2').value.trim() : '';
+        gameState.player1Name = n1 || 'Player 1';
+        gameState.player2Name = n2 || 'Player 2';
+        savePlayerNamesToStorage();
+        updateScoreboard();
+    } catch (e) { console.warn('applyPlayerNames failed', e); }
+}
+
+function saveHistoryToStorage() {
+    try {
+        localStorage.setItem('vscore_history', JSON.stringify(gameState.matchHistory || []));
+    } catch (e) { console.warn('saveHistoryToStorage failed', e); }
+}
+
+function loadHistoryFromStorage() {
+    try {
+        gameState.matchHistory = JSON.parse(localStorage.getItem('vscore_history') || '[]');
+    } catch (e) { gameState.matchHistory = []; }
+}
+
+function addHistoryEntry(entry) {
+    gameState.matchHistory = gameState.matchHistory || [];
+    gameState.matchHistory.push(entry);
+    saveHistoryToStorage();
+}
+
+function showHistory() {
+    loadHistoryFromStorage();
+    renderHistoryList();
+    const modal = document.getElementById('historyModal');
+    if (modal) modal.classList.add('active');
+}
+
+function closeHistoryModal() {
+    const modal = document.getElementById('historyModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function renderHistoryList() {
+    const container = document.getElementById('historyList');
+    if (!container) return;
+    container.innerHTML = '';
+    if (!gameState.matchHistory || gameState.matchHistory.length === 0) {
+        container.innerHTML = '<div style="padding:0.5rem;color:#666">기록이 없습니다.</div>';
+        return;
+    }
+    const table = document.createElement('table');
+    table.style.width = '100%';
+    table.style.borderCollapse = 'collapse';
+    (gameState.matchHistory || []).slice().reverse().forEach(e => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid #eee';
+        const td = document.createElement('td');
+        td.style.padding = '0.45rem';
+        td.innerHTML = `<strong>${e.date} ${e.time}</strong><br/>${e.game}<br/>${e.player1} ${e.score1} - ${e.player2} ${e.score2} (Set ${e.set})${e.memo ? '<br/><em>' + e.memo + '</em>' : ''}`;
+        tr.appendChild(td);
+        table.appendChild(tr);
+    });
+    container.appendChild(table);
+}
+
+function clearHistory() {
+    if (!confirm('모든 기록을 삭제하시겠습니까?')) return;
+    gameState.matchHistory = [];
+    saveHistoryToStorage();
+    renderHistoryList();
+}
+
+function exportHistory() {
+    try {
+        const rows = [['일자','시간','경기명','선수이름','점수','선수이름','점수','세트 번호','메모']];
+        (gameState.matchHistory || []).forEach(e => rows.push([e.date, e.time, e.game, e.player1, e.score1, e.player2, e.score2, e.set, e.memo || '']));
+        const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'vscore_history.csv';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    } catch (e) { console.warn('exportHistory failed', e); }
+}
+
+function getGameDisplayName(code) {
+    const m = { 'pickleball': '피클볼', 'pingpong': '탁구', 'badminton': '배드민턴', 'Jokgu': '족구' };
+    return m[code] || code || '';
 }
 
 // 서브 체인지 알림 (탁구/배드민턴/피클볼)
@@ -241,6 +360,11 @@ function updateScoreboard() {
     document.getElementById('score2').textContent = gameState.player2Score;
     document.getElementById('player1SetsInline').textContent = gameState.player1Sets;
     document.getElementById('player2SetsInline').textContent = gameState.player2Sets;
+    // 선수 이름 UI 반영
+    const pn1 = document.querySelector('#player1Score .player-name');
+    const pn2 = document.querySelector('#player2Score .player-name');
+    if (pn1) pn1.innerHTML = `${gameState.player1Name} - <span id="player1SetsInline">${gameState.player1Sets}</span>`;
+    if (pn2) pn2.innerHTML = `${gameState.player2Name} - <span id="player2SetsInline">${gameState.player2Sets}</span>`;
     updateServeColor();
 }
 
@@ -426,6 +550,25 @@ function endSet(winner) {
     }
 
     updateScoreboard();
+
+    // --- 기록 저장 ---
+    try {
+        const now = new Date();
+        const date = now.toLocaleDateString('ko-KR');
+        const time = now.toLocaleTimeString('ko-KR');
+        const memo = document.getElementById('setMemoInput') ? document.getElementById('setMemoInput').value : '';
+        addHistoryEntry({
+            date,
+            time,
+            game: getGameDisplayName(gameState.selectedGame),
+            player1: gameState.player1Name,
+            score1: gameState.player1Score,
+            player2: gameState.player2Name,
+            score2: gameState.player2Score,
+            set: gameState.currentSet,
+            memo
+        });
+    } catch (e) { console.warn('set history save failed', e); }
 
     // 게임 종료 확인
     const neededSets = Math.ceil(gameState.totalSets / 2);
