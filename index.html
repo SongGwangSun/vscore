@@ -306,8 +306,12 @@
                 <div id="detailVideoContainer" style="display:block;margin-top:0.5rem;">
                     <label>녹화 영상(Video): </label>
                     <div style="display:flex;flex-direction:column;gap:0.25rem;margin-top:0.25rem;">
-                        <video id="detailVideo" controls style="max-width:100%;display:none;background:#000;border-radius:6px;"></video>
+                        <video id="detailVideo" controls style="max-width:100%;display:none;background:#000;border-radius:6px;-webkit-user-select:none;user-select:none;"></video>
                         <div id="detailVideoName" style="font-size:0.85rem;color:#444;"></div>
+                        <div id="detailVideoDownloadBtn" style="display:none;">
+                            <button class="modal-action" onclick="downloadDetailVideo()" style="width:100%;margin-top:0.25rem;">다운로드(Download)</button>
+                            <div style="font-size:0.75rem;color:#999;margin-top:0.2rem;text-align:center;">iOS: 길게 눌러서 저장(Long-press to save)</div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -123,17 +123,12 @@ function startRecording() {
                 try { await saveVideoToDB(filename, blob); } catch (e) { console.warn('saveVideoToDB failed', e); }
                 // keep in-session objectURL
                 try { const url = URL.createObjectURL(blob); gameState.recordings[filename] = url; } catch (e) { console.warn(e); }
-                // on mobile, try to save to gallery using Web Share API or webkit bridge
+                // on mobile, try to save to gallery using Web Share API
                 try {
                     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                     if (isMobile && navigator.share) {
-                        // Use Web Share API to offer save/share options on Android
+                        // Use Web Share API to offer save/share options
                         await navigator.share({ files: [new File([blob], filename, { type: 'video/webm' })] }).catch(() => {});
-                    } else if (isMobile && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.saveVideo) {
-                        // iOS WebKit bridge (if available in app)
-                        const reader = new FileReader();
-                        reader.onload = function(e) { window.webkit.messageHandlers.saveVideo.postMessage(e.target.result); };
-                        reader.readAsArrayBuffer(blob);
                     } else {
                         // Desktop or fallback: trigger standard download
                         const a = document.createElement('a');
@@ -566,22 +561,46 @@ function openHistoryDetail(origIndex) {
     // show video if present
     const videoEl = document.getElementById('detailVideo');
     const videoNameEl = document.getElementById('detailVideoName');
+    const downloadBtn = document.getElementById('detailVideoDownloadBtn');
     if (rec.video) {
         videoNameEl.textContent = rec.video || '';
         // try to get URL from IndexedDB or in-memory
         getVideoURL(rec.video).then(url => {
             if (url) {
                 videoEl.src = url; videoEl.style.display = '';
+                if (downloadBtn) downloadBtn.style.display = '';
+                // store the current video filename for download
+                document.getElementById('historyDetailModal').dataset.videoFile = rec.video;
             } else {
                 videoEl.src = '';
                 videoEl.style.display = 'none';
+                if (downloadBtn) downloadBtn.style.display = 'none';
             }
         });
     } else {
         if (videoEl) { videoEl.src = ''; videoEl.style.display = 'none'; }
         if (videoNameEl) videoNameEl.textContent = '';
+        if (downloadBtn) downloadBtn.style.display = 'none';
     }
     const modal = document.getElementById('historyDetailModal'); if (modal) modal.classList.add('active');
+}
+
+function downloadDetailVideo() {
+    const modal = document.getElementById('historyDetailModal');
+    const filename = modal.dataset.videoFile;
+    if (!filename) return alert('비디오 파일이 없습니다.');
+    getVideoURL(filename).then(url => {
+        if (url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        } else {
+            alert('비디오를 로드할 수 없습니다. 나중에 다시 시도해주세요.');
+        }
+    });
 }
 
 function closeHistoryDetail() {
