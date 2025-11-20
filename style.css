@@ -403,7 +403,7 @@ body.mobile {
 }
 
 /* Mobile tweaks: make control/back and player-select buttons larger and touch-friendly */
-@media (max-width: 480px) {
+@media (max-width: 300px) {
     .control-btn {
         padding: 0.6rem 1rem !important;
         border-radius: 10px !important;
