@@ -1300,6 +1300,7 @@ body.android .end-btn {
 
 .modal {
     display: none;
+    overflow-y: auto;
     position: fixed;
     z-index: 1000;
     left: 0; top: 0; width: 100vw; height: 100vh;
@@ -1324,11 +1325,6 @@ body.android .end-btn {
     position: relative;
     animation: modalFadeIn 0.25s;
 }
-.modal-body {
-    max-height: calc(100vh - 200px); /* 화면 높이를 고려한 최대 높이 */
-    overflow-y: auto; /* 세로 스크롤 생성 */
-}
-
 @keyframes modalFadeIn {
     from { transform: translateY(40px) scale(0.98); opacity: 0; }
     to   { transform: translateY(0) scale(1); opacity: 1; }
