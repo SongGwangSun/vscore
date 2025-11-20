@@ -403,40 +403,6 @@ body.mobile {
 }
 
 /* Mobile tweaks: make control/back and player-select buttons larger and touch-friendly */
-@media (max-width: 300px) {
-    .control-btn {
-        padding: 0.6rem 1rem !important;
-        border-radius: 10px !important;
-        min-width: 96px !important;
-        max-width: none !important;
-        height: auto !important;
-        font-size: 1.05rem !important;
-    }
-
-    /* ensure small inline-styled buttons inside settings align nicely */
-    #gameSettings .setting-group div > div .control-btn,
-    #gameSettings > div > .control-btn {
-        align-self: center;
-    }
-
-    /* top menu button slightly larger and rectangular on phones */
-    #gameMenuBtn.control-btn {
-        padding: 0.5rem 0.8rem !important;
-        min-width: 56px !important;
-        border-radius: 10px !important;
-    }
-
-    /* reduce gaps and slightly shrink game tiles so layout fits mobile neatly */
-    .game-buttons {
-        gap: 0.9rem;
-    }
-    .game-btn {
-        min-width: 120px;
-        min-height: 120px;
-        padding: 1.2rem;
-        border-radius: 16px;
-    }
-}
 
 .scoreboard-container {
     display: flex;
