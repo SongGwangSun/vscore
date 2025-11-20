@@ -1305,7 +1305,7 @@ body.android .end-btn {
     z-index: 1000;
     left: 0; top: 0; width: 100vw; height: 100vh;
     /* slightly darker and blurred backdrop for modern look */
-    background: rgba(17,24,39,0.7);
+    background: rgba(17,24,39,0.5);
     backdrop-filter: blur(6px);
     justify-content: center;
     align-items: center;
