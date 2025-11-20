@@ -1299,7 +1299,7 @@ body.android .end-btn {
 }
 
 .modal {
-    display: flex;
+    display: none;
     overflow-y: auto;
     position: fixed;
     z-index: 1000;
