@@ -123,17 +123,29 @@ function startRecording() {
                 try { await saveVideoToDB(filename, blob); } catch (e) { console.warn('saveVideoToDB failed', e); }
                 // keep in-session objectURL
                 try { const url = URL.createObjectURL(blob); gameState.recordings[filename] = url; } catch (e) { console.warn(e); }
-                // trigger automatic download so user gets the file
+                // on mobile, try to save to gallery using Web Share API or webkit bridge
                 try {
-                    const a = document.createElement('a');
-                    const url = URL.createObjectURL(blob);
-                    a.href = url;
-                    a.download = filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    setTimeout(() => URL.revokeObjectURL(url), 5000);
-                } catch (e) { console.warn('auto download failed', e); }
+                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                    if (isMobile && navigator.share) {
+                        // Use Web Share API to offer save/share options on Android
+                        await navigator.share({ files: [new File([blob], filename, { type: 'video/webm' })] }).catch(() => {});
+                    } else if (isMobile && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.saveVideo) {
+                        // iOS WebKit bridge (if available in app)
+                        const reader = new FileReader();
+                        reader.onload = function(e) { window.webkit.messageHandlers.saveVideo.postMessage(e.target.result); };
+                        reader.readAsArrayBuffer(blob);
+                    } else {
+                        // Desktop or fallback: trigger standard download
+                        const a = document.createElement('a');
+                        const url = URL.createObjectURL(blob);
+                        a.href = url;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        setTimeout(() => URL.revokeObjectURL(url), 5000);
+                    }
+                } catch (e) { console.warn('save/download video failed', e); }
             };
             mediaRecorder.start();
             return true;
@@ -615,7 +627,9 @@ function exportHistory() {
         const rows = [['일자','시간','경기명','선수이름','점수','선수이름','점수','세트 번호','메모']];
         (gameState.matchHistory || []).forEach(e => rows.push([e.date, e.time, e.game, e.player1, e.score1, e.player2, e.score2, e.set, e.memo || '']));
         const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        // Add UTF-8 BOM (\uFEFF) at the beginning so Excel recognizes Korean text properly
+        const bom = '\uFEFF';
+        const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
