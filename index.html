@@ -339,9 +339,39 @@
         </div>
     </div>
 
-    <!-- FFmpeg for video conversion (webm to mp4) -->
+    <!-- Recording Progress Modal -->
+    <div id="recordingProgressModal" class="modal">
+        <div class="modal-content" style="max-width:300px;text-align:center;">
+            <h3 style="margin-top:0;">동영상 변환 중(Converting...)</h3>
+            <div style="margin:1.5rem 0;">
+                <div style="width:100%;background:#e0e0e0;border-radius:10px;overflow:hidden;height:20px;">
+                    <div id="conversionProgressBar" style="width:0%;background:linear-gradient(90deg,#667eea,#764ba2);height:100%;transition:width 0.3s;"></div>
+                </div>
+                <div id="conversionProgressText" style="margin-top:0.5rem;font-size:0.9rem;color:#666;">0%</div>
+            </div>
+            <div style="font-size:0.85rem;color:#999;">잠시만 기다려주세요...</div>
+        </div>
+    </div>
+
+    <!-- Save Confirmation Modal -->
+    <div id="saveConfirmModal" class="modal">
+        <div class="modal-content" style="max-width:320px;">
+            <h3 style="margin-top:0;">동영상 저장 완료(Save Complete)</h3>
+            <div style="margin:1rem 0;padding:1rem;background:#f0f8ff;border-radius:8px;border-left:4px solid #667eea;">
+                <div style="font-size:0.9rem;color:#333;margin-bottom:0.5rem;" id="saveConfirmFilename"></div>
+                <div style="font-size:0.8rem;color:#666;">아이폰: 파일 앱에서 확인하거나<br/>AirDrop으로 다른 기기에 보낼 수 있습니다.</div>
+            </div>
+            <div class="modal-footer" style="display:flex;gap:0.5rem;justify-content:center;margin-top:1rem;">
+                <button class="modal-action" onclick="closeSaveConfirm()">확인(OK)</button>
+            </div>
+        </div>
+    </div>
+
     <script async src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js"></script>
     <script src="script.js"></script>
+</body>
+
+</html>
 </body>
 
 </html>

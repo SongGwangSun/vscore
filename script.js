@@ -58,19 +58,52 @@ async function convertWebmToMp4(webmBlob, filename) {
         const { FFmpeg, fetchFile } = FFmpeg;
         const ffmpeg = new FFmpeg.FFmpeg();
         if (!ffmpeg.isLoaded()) await ffmpeg.load();
+        
+        // Show progress modal
+        const modal = document.getElementById('recordingProgressModal');
+        if (modal) modal.classList.add('active');
+        
         const inputName = 'input.webm';
         const outputName = filename.replace('.webm', '.mp4');
+        
+        // Set up progress listener
+        ffmpeg.on('progress', (e) => {
+            const progress = Math.round((e.progress || 0) * 100);
+            const progressBar = document.getElementById('conversionProgressBar');
+            const progressText = document.getElementById('conversionProgressText');
+            if (progressBar) progressBar.style.width = progress + '%';
+            if (progressText) progressText.textContent = progress + '%';
+        });
+        
         await ffmpeg.writeFile(inputName, await fetchFile(webmBlob));
         await ffmpeg.exec(['-i', inputName, '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'aac', outputName]);
         const mp4Data = await ffmpeg.readFile(outputName);
         const mp4Blob = new Blob([mp4Data.buffer], { type: 'video/mp4' });
         await ffmpeg.deleteFile(inputName);
         await ffmpeg.deleteFile(outputName);
+        
+        // Hide progress modal
+        if (modal) modal.classList.remove('active');
+        
         return { blob: mp4Blob, filename: outputName };
     } catch (e) {
         console.warn('convertWebmToMp4 failed', e);
+        const modal = document.getElementById('recordingProgressModal');
+        if (modal) modal.classList.remove('active');
         return null;
     }
+}
+
+function showSaveConfirm(filename) {
+    const filenameEl = document.getElementById('saveConfirmFilename');
+    if (filenameEl) filenameEl.textContent = '파일명: ' + filename;
+    const modal = document.getElementById('saveConfirmModal');
+    if (modal) modal.classList.add('active');
+}
+
+function closeSaveConfirm() {
+    const modal = document.getElementById('saveConfirmModal');
+    if (modal) modal.classList.remove('active');
 }
 
 // IndexedDB helpers for storing video blobs persistently
@@ -179,36 +212,21 @@ function startRecording() {
                 try { await saveVideoToDB(filename, saveBlob); } catch (e) { console.warn('saveVideoToDB failed', e); }
                 // keep in-session objectURL
                 try { const url = URL.createObjectURL(saveBlob); gameState.recordings[filename] = url; } catch (e) { console.warn(e); }
-                // on mobile, try to save to gallery using Web Share API or download
+                
+                // trigger download (iOS will allow save to Files/Photos from download)
                 try {
-                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                    if (isMobile && navigator.share) {
-                        // Use Web Share API to offer save/share options
-                        try {
-                            await navigator.share({ files: [new File([saveBlob], filename, { type: saveMimeType })] });
-                        } catch (e) {
-                            // User cancelled or share failed, fallback to download
-                            const a = document.createElement('a');
-                            const url = URL.createObjectURL(saveBlob);
-                            a.href = url;
-                            a.download = filename;
-                            document.body.appendChild(a);
-                            a.click();
-                            a.remove();
-                            setTimeout(() => URL.revokeObjectURL(url), 5000);
-                        }
-                    } else {
-                        // Desktop or fallback: trigger standard download
-                        const a = document.createElement('a');
-                        const url = URL.createObjectURL(saveBlob);
-                        a.href = url;
-                        a.download = filename;
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-                        setTimeout(() => URL.revokeObjectURL(url), 5000);
-                    }
-                } catch (e) { console.warn('save/download video failed', e); }
+                    const a = document.createElement('a');
+                    const url = URL.createObjectURL(saveBlob);
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    setTimeout(() => URL.revokeObjectURL(url), 5000);
+                    
+                    // show save confirmation
+                    showSaveConfirm(filename);
+                } catch (e) { console.warn('download video failed', e); }
             };
             mediaRecorder.start();
             return true;
