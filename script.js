@@ -315,7 +315,7 @@ function renderVoiceLanguage() {
 }
 
 function voiceLanguage() {
-    renderVoiceLanguage();
+//    renderVoiceLanguage();
     const modal = document.getElementById('voiceLanguage');
     if (modal) modal.classList.add('active');
 }
