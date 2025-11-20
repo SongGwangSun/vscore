@@ -128,7 +128,7 @@
                     <label style="display:flex;align-items:center;gap:6px;">
                         <input type="checkbox" id="enableRecording" /> 녹화하기(Enable recording)
                     </label>
-                    <label style="display:flex;align-items:center;gap:6px;">
+                    <label style="display:flex;align-items:center;gap:6px;align-items:center;">
                         화질(Quality):
                         <select id="recordQuality" style="padding:0.35rem;border-radius:6px;border:1px solid #e6e6e6;">
                             <option value="medium">중간(Medium)</option>
@@ -136,7 +136,18 @@
                             <option value="high">높음(High)</option>
                         </select>
                     </label>
-                    <div style="color:#666;font-size:0.85rem;">녹화 시 화면 공유 권한이 요청됩니다.</div>
+                    <label id="facingLabel" style="display:flex;align-items:center;gap:6px;">
+                        카메라 선택(Camera):
+                        <select id="cameraFacing" style="padding:0.35rem;border-radius:6px;border:1px solid #e6e6e6;">
+                            <option value="user">전면(Front)</option>
+                            <option value="environment">후면(Back)</option>
+                        </select>
+                    </label>
+                    <label id="deviceLabel" style="display:none;align-items:center;gap:6px;">
+                        장치(Device):
+                        <select id="cameraDevice" style="padding:0.35rem;border-radius:6px;border:1px solid #e6e6e6;"></select>
+                    </label>
+                    <div style="color:#666;font-size:0.85rem;">카메라 접근 권한이 요청됩니다. (휴대폰은 전면/후면 선택 가능)</div>
                 </div>
             </div>
 

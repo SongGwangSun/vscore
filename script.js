@@ -93,12 +93,19 @@ function startRecording() {
     try {
         const enabled = document.getElementById('enableRecording') ? document.getElementById('enableRecording').checked : false;
         if (!enabled) return Promise.resolve(null);
-        // ask for display capture (screen)
-        return navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then(stream => {
+        // camera capture via getUserMedia
+        const quality = document.getElementById('recordQuality') ? document.getElementById('recordQuality').value : 'medium';
+        const bits = _qualityToBits(quality);
+        const facing = document.getElementById('cameraFacing') ? document.getElementById('cameraFacing').value : 'user';
+        const deviceSelect = document.getElementById('cameraDevice');
+        let constraints = { audio: true, video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: facing } };
+        if (deviceSelect && deviceSelect.value) {
+            // prefer a specific deviceId if chosen
+            constraints.video = { deviceId: { exact: deviceSelect.value } };
+        }
+        return navigator.mediaDevices.getUserMedia(constraints).then(stream => {
             recordingStream = stream;
             recordedChunks = [];
-            const quality = document.getElementById('recordQuality') ? document.getElementById('recordQuality').value : 'medium';
-            const bits = _qualityToBits(quality);
             let options = { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: bits };
             try { mediaRecorder = new MediaRecorder(stream, options); }
             catch (e) {
@@ -130,7 +137,7 @@ function startRecording() {
             };
             mediaRecorder.start();
             return true;
-        }).catch(e => { console.warn('getDisplayMedia failed', e); return null; });
+        }).catch(e => { console.warn('getUserMedia failed', e); return null; });
     } catch (err) { console.warn('startRecording error', err); return Promise.resolve(null); }
 }
 
@@ -1350,6 +1357,40 @@ document.addEventListener('DOMContentLoaded', function () {
             loadVoices();
         });
     }
+
+    // populate camera devices and wire camera-facing UI
+    async function populateCameras() {
+        try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoInputs = devices.filter(d => d.kind === 'videoinput');
+            const deviceSelect = document.getElementById('cameraDevice');
+            const deviceLabel = document.getElementById('deviceLabel');
+            const facingSelect = document.getElementById('cameraFacing');
+            if (videoInputs && videoInputs.length > 0) {
+                // if multiple devices, show device list for desktops
+                if (deviceSelect) {
+                    deviceSelect.innerHTML = '';
+                    videoInputs.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d.deviceId;
+                        opt.textContent = d.label || ('Camera ' + (deviceSelect.length + 1));
+                        deviceSelect.appendChild(opt);
+                    });
+                }
+                // show device label only if multiple devices
+                if (deviceLabel) deviceLabel.style.display = videoInputs.length > 1 ? '' : 'none';
+                // if there's at least one camera, allow facing control for mobile
+                if (facingSelect) facingSelect.style.display = '';
+            }
+        } catch (e) { console.warn('populateCameras failed', e); }
+    }
+
+    // run once to populate
+    populateCameras();
+
+    // allow manual refresh (in case user plugs in camera)
+    try { window.addEventListener('focus', populateCameras); } catch (e) {}
 });
 
 // PWA 지원을 위한 서비스 워커 등록 (일시적으로 비활성화)
