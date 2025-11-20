@@ -33,6 +33,46 @@ let currentRecordingFilename = null;
 // cache of filename -> objectURL for playback (in-session) and loaded from IndexedDB
 gameState.recordings = gameState.recordings || {};
 
+// FFmpeg initialization
+let ffmpegReady = false;
+async function initFFmpeg() {
+    try {
+        if (typeof FFmpeg === 'undefined') return false;
+        const { FFmpeg, fetchFile } = FFmpeg;
+        if (ffmpegReady) return true;
+        const ffmpeg = new FFmpeg.FFmpeg();
+        if (!ffmpeg.isLoaded()) {
+            await ffmpeg.load();
+        }
+        ffmpegReady = true;
+        return true;
+    } catch (e) {
+        console.warn('FFmpeg init failed', e);
+        return false;
+    }
+}
+
+async function convertWebmToMp4(webmBlob, filename) {
+    try {
+        if (!await initFFmpeg()) return null; // fallback to webm if FFmpeg unavailable
+        const { FFmpeg, fetchFile } = FFmpeg;
+        const ffmpeg = new FFmpeg.FFmpeg();
+        if (!ffmpeg.isLoaded()) await ffmpeg.load();
+        const inputName = 'input.webm';
+        const outputName = filename.replace('.webm', '.mp4');
+        await ffmpeg.writeFile(inputName, await fetchFile(webmBlob));
+        await ffmpeg.exec(['-i', inputName, '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'aac', outputName]);
+        const mp4Data = await ffmpeg.readFile(outputName);
+        const mp4Blob = new Blob([mp4Data.buffer], { type: 'video/mp4' });
+        await ffmpeg.deleteFile(inputName);
+        await ffmpeg.deleteFile(outputName);
+        return { blob: mp4Blob, filename: outputName };
+    } catch (e) {
+        console.warn('convertWebmToMp4 failed', e);
+        return null;
+    }
+}
+
 // IndexedDB helpers for storing video blobs persistently
 function openVideoDB() {
     return new Promise((resolve, reject) => {
@@ -113,26 +153,54 @@ function startRecording() {
             }
             mediaRecorder.ondataavailable = function (e) { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
             mediaRecorder.onstop = async function () {
-                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const webmBlob = new Blob(recordedChunks, { type: 'video/webm' });
                 const now = new Date();
                 const stamp = now.toISOString().replace(/[:-]/g, '').replace(/\.\d+Z$/, '');
                 const gameName = getGameDisplayName(gameState.selectedGame) || 'game';
-                const filename = `${stamp}_${gameName}.webm`;
+                let filename = `${stamp}_${gameName}.webm`;
+                let saveBlob = webmBlob;
+                let saveMimeType = 'video/webm';
+
+                // on iOS, convert webm to mp4 for native Photos app compatibility
+                const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+                if (isIOS) {
+                    try {
+                        const converted = await convertWebmToMp4(webmBlob, filename);
+                        if (converted) {
+                            filename = converted.filename;
+                            saveBlob = converted.blob;
+                            saveMimeType = 'video/mp4';
+                        }
+                    } catch (e) { console.warn('MP4 conversion failed, using webm fallback', e); }
+                }
+
                 currentRecordingFilename = filename;
                 // save to IndexedDB for later playback
-                try { await saveVideoToDB(filename, blob); } catch (e) { console.warn('saveVideoToDB failed', e); }
+                try { await saveVideoToDB(filename, saveBlob); } catch (e) { console.warn('saveVideoToDB failed', e); }
                 // keep in-session objectURL
-                try { const url = URL.createObjectURL(blob); gameState.recordings[filename] = url; } catch (e) { console.warn(e); }
-                // on mobile, try to save to gallery using Web Share API
+                try { const url = URL.createObjectURL(saveBlob); gameState.recordings[filename] = url; } catch (e) { console.warn(e); }
+                // on mobile, try to save to gallery using Web Share API or download
                 try {
                     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                     if (isMobile && navigator.share) {
                         // Use Web Share API to offer save/share options
-                        await navigator.share({ files: [new File([blob], filename, { type: 'video/webm' })] }).catch(() => {});
+                        try {
+                            await navigator.share({ files: [new File([saveBlob], filename, { type: saveMimeType })] });
+                        } catch (e) {
+                            // User cancelled or share failed, fallback to download
+                            const a = document.createElement('a');
+                            const url = URL.createObjectURL(saveBlob);
+                            a.href = url;
+                            a.download = filename;
+                            document.body.appendChild(a);
+                            a.click();
+                            a.remove();
+                            setTimeout(() => URL.revokeObjectURL(url), 5000);
+                        }
                     } else {
                         // Desktop or fallback: trigger standard download
                         const a = document.createElement('a');
-                        const url = URL.createObjectURL(blob);
+                        const url = URL.createObjectURL(saveBlob);
                         a.href = url;
                         a.download = filename;
                         document.body.appendChild(a);
