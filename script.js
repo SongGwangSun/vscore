@@ -25,6 +25,134 @@ let speechUtterance = null;
 // 캐시된 음성 목록
 let voicesList = [];
 
+// --- Recording state ---
+let mediaRecorder = null;
+let recordingStream = null;
+let recordedChunks = [];
+let currentRecordingFilename = null;
+// cache of filename -> objectURL for playback (in-session) and loaded from IndexedDB
+gameState.recordings = gameState.recordings || {};
+
+// IndexedDB helpers for storing video blobs persistently
+function openVideoDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open('vscore_videos', 1);
+        req.onupgradeneeded = function (e) {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('videos')) db.createObjectStore('videos');
+        };
+        req.onsuccess = function (e) { resolve(e.target.result); };
+        req.onerror = function (e) { reject(e.target.error); };
+    });
+}
+
+function saveVideoToDB(filename, blob) {
+    return openVideoDB().then(db => new Promise((resolve, reject) => {
+        const tx = db.transaction('videos', 'readwrite');
+        const store = tx.objectStore('videos');
+        const putReq = store.put(blob, filename);
+        putReq.onsuccess = () => { resolve(true); };
+        putReq.onerror = (e) => { console.warn('saveVideoToDB error', e); reject(e); };
+    })).catch(e => { console.warn('saveVideoToDB fail', e); });
+}
+
+function getVideoFromDB(filename) {
+    return openVideoDB().then(db => new Promise((resolve, reject) => {
+        const tx = db.transaction('videos', 'readonly');
+        const store = tx.objectStore('videos');
+        const getReq = store.get(filename);
+        getReq.onsuccess = () => { resolve(getReq.result || null); };
+        getReq.onerror = (e) => { reject(e); };
+    })).catch(e => { console.warn('getVideoFromDB fail', e); return null; });
+}
+
+function getVideoURL(filename) {
+    return new Promise(async (resolve) => {
+        if (!filename) return resolve(null);
+        if (gameState.recordings && gameState.recordings[filename]) return resolve(gameState.recordings[filename]);
+        // try load from IndexedDB
+        const blob = await getVideoFromDB(filename);
+        if (blob) {
+            const url = URL.createObjectURL(blob);
+            gameState.recordings[filename] = url;
+            return resolve(url);
+        }
+        resolve(null);
+    });
+}
+
+function _qualityToBits(q) {
+    switch ((q || '').toLowerCase()) {
+        case 'low': return 400000; // ~400kbps
+        case 'high': return 3000000; // ~3mbps
+        default: return 1200000; // medium ~1.2mbps
+    }
+}
+
+function startRecording() {
+    try {
+        const enabled = document.getElementById('enableRecording') ? document.getElementById('enableRecording').checked : false;
+        if (!enabled) return Promise.resolve(null);
+        // ask for display capture (screen)
+        return navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then(stream => {
+            recordingStream = stream;
+            recordedChunks = [];
+            const quality = document.getElementById('recordQuality') ? document.getElementById('recordQuality').value : 'medium';
+            const bits = _qualityToBits(quality);
+            let options = { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: bits };
+            try { mediaRecorder = new MediaRecorder(stream, options); }
+            catch (e) {
+                try { mediaRecorder = new MediaRecorder(stream); } catch (err) { console.warn('MediaRecorder unsupported', err); return null; }
+            }
+            mediaRecorder.ondataavailable = function (e) { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
+            mediaRecorder.onstop = async function () {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const now = new Date();
+                const stamp = now.toISOString().replace(/[:-]/g, '').replace(/\.\d+Z$/, '');
+                const gameName = getGameDisplayName(gameState.selectedGame) || 'game';
+                const filename = `${stamp}_${gameName}.webm`;
+                currentRecordingFilename = filename;
+                // save to IndexedDB for later playback
+                try { await saveVideoToDB(filename, blob); } catch (e) { console.warn('saveVideoToDB failed', e); }
+                // keep in-session objectURL
+                try { const url = URL.createObjectURL(blob); gameState.recordings[filename] = url; } catch (e) { console.warn(e); }
+                // trigger automatic download so user gets the file
+                try {
+                    const a = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    setTimeout(() => URL.revokeObjectURL(url), 5000);
+                } catch (e) { console.warn('auto download failed', e); }
+            };
+            mediaRecorder.start();
+            return true;
+        }).catch(e => { console.warn('getDisplayMedia failed', e); return null; });
+    } catch (err) { console.warn('startRecording error', err); return Promise.resolve(null); }
+}
+
+function stopRecording() {
+    return new Promise((resolve) => {
+        if (!mediaRecorder) return resolve(null);
+        try {
+            mediaRecorder.onstop = mediaRecorder.onstop || mediaRecorder.onstop;
+            mediaRecorder.addEventListener('stop', function handler() {
+                // after onstop handler above runs, currentRecordingFilename should be set
+                const fn = currentRecordingFilename;
+                // stop tracks
+                try { if (recordingStream) recordingStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+                mediaRecorder = null; recordingStream = null; recordedChunks = [];
+                resolve(fn || null);
+            }, { once: true });
+            // stop recorder (triggers onstop)
+            if (mediaRecorder.state !== 'inactive') mediaRecorder.stop(); else resolve(currentRecordingFilename || null);
+        } catch (e) { console.warn('stopRecording failed', e); resolve(null); }
+    });
+}
+
 function loadVoices() {
     voicesList = speechSynthesis.getVoices() || [];
     // 일부 브라우저는 voices가 비동기 로드되므로 이벤트로 재시도
@@ -368,7 +496,7 @@ function renderHistoryList() {
         tr.style.padding = '0';
         const td = document.createElement('td');
         td.style.padding = '0.45rem';
-        td.innerHTML = `<strong>${e.date} ${e.time}</strong><br/>${e.game}<br/>${e.player1} ${e.score1} - ${e.player2} ${e.score2} (Set ${e.set})${e.memo ? '<br/><em>' + e.memo + '</em>' : ''}`;
+        td.innerHTML = `<strong>${e.date} ${e.time}</strong><br/>${e.game}<br/>${e.player1} ${e.score1} - ${e.player2} ${e.score2} (Set ${e.set})${e.memo ? '<br/><em>' + e.memo + '</em>' : ''}${e.video ? '<br/><small>Video: ' + e.video + '</small>' : ''}`;
         // compute original index in matchHistory
         const origIndex = full.length - 1 - i;
         tr.dataset.idx = String(origIndex);
@@ -416,6 +544,24 @@ function openHistoryDetail(origIndex) {
     document.getElementById('detailSet').value = rec.set || '';
     document.getElementById('detailMemo').value = rec.memo || '';
     document.getElementById('historyDetailModal').dataset.idx = String(origIndex);
+    // show video if present
+    const videoEl = document.getElementById('detailVideo');
+    const videoNameEl = document.getElementById('detailVideoName');
+    if (rec.video) {
+        videoNameEl.textContent = rec.video || '';
+        // try to get URL from IndexedDB or in-memory
+        getVideoURL(rec.video).then(url => {
+            if (url) {
+                videoEl.src = url; videoEl.style.display = '';
+            } else {
+                videoEl.src = '';
+                videoEl.style.display = 'none';
+            }
+        });
+    } else {
+        if (videoEl) { videoEl.src = ''; videoEl.style.display = 'none'; }
+        if (videoNameEl) videoNameEl.textContent = '';
+    }
     const modal = document.getElementById('historyDetailModal'); if (modal) modal.classList.add('active');
 }
 
@@ -556,6 +702,13 @@ function startGame() {
     speakNarration('gameStart');
     // announce initial serve position
     setTimeout(() => speakServePosition(currentServer), 600);
+    // start recording if enabled
+    try {
+        startRecording().then(res => {
+            if (res === null) console.log('Recording not started or was declined/not supported');
+            else console.log('Recording started');
+        });
+    } catch (e) { console.warn('startRecording call failed', e); }
 }
 
 // 화면 전환
@@ -811,14 +964,28 @@ function endSet(winner) {
             player2: gameState.player2Name,
             score2: gameState.player2Score,
             set: gameState.currentSet,
-            memo
+            memo,
+            video: null
         });
     } catch (e) { console.warn('set history save failed', e); }
 
     // 게임 종료 확인
     const neededSets = Math.ceil(gameState.totalSets / 2);
     if (gameState.player1Sets >= neededSets || gameState.player2Sets >= neededSets) {
-        endGame();
+        // stop recording if active, then attach filename to the latest history entry and end game
+        stopRecording().then(filename => {
+            try {
+                if (filename) {
+                    const idx = (gameState.matchHistory || []).length - 1;
+                    if (idx >= 0) {
+                        const rec = gameState.matchHistory[idx];
+                        rec.video = filename;
+                        saveHistoryToStorage();
+                    }
+                }
+            } catch (e) { console.warn('attach recording filename failed', e); }
+            endGame();
+        }).catch(e => { console.warn('stopRecording failed', e); endGame(); });
     } else {
         // 다음 세트 시작
         setTimeout(() => {
@@ -945,9 +1112,9 @@ function handlePlayerScore(player) {
 // 코트 전환
 function switchCourt() {
     // 플레이어 점수, 세트, 이름 등 좌우 교체
-    // 예시: 점수와 세트만 교체
     [gameState.player1Score, gameState.player2Score] = [gameState.player2Score, gameState.player1Score];
     [gameState.player1Sets, gameState.player2Sets] = [gameState.player2Sets, gameState.player1Sets];
+    [gameState.player1Name, gameState.player2Name] = [gameState.player2Name, gameState.player1Name];
     updateScoreboard();
     currentServer = currentServer == 1 ? 2 : 1;
     updateServeColor();

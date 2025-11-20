@@ -28,7 +28,7 @@
         <div id="gameMenu"
             style="display:none;position:absolute;top:56px;right:20px;background:#fff;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.12);padding:8px;z-index:1200;">
             <button class="modal-action" style="display:block;width:100%;margin-bottom:6px;"
-                onclick="openSavedNamesManager();toggleGameMenu()">선수 관리(Manage Players)</button>
+                onclick="openSavedNamesManager();toggleGameMenu()">선수 관리(Players)</button>
             <button class="modal-action" style="display:block;width:100%;margin-bottom:6px;"
                 onclick="showHistory();toggleGameMenu()">기록 보기(History)</button>
             <button class="modal-action" style="display:block;width:100%;margin-bottom:6px;"
@@ -120,6 +120,24 @@
                 <label for="setMemoInput">세트 메모(Memo):</label>
                 <input type="text" id="setMemoInput" class="voice-select" placeholder="메모를 입력하세요 (optional)"
                     aria-label="Set memo" />
+            </div>
+
+            <div class="setting-group">
+                <label>동영상 녹화 옵션(Recording):</label>
+                <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                    <label style="display:flex;align-items:center;gap:6px;">
+                        <input type="checkbox" id="enableRecording" /> 녹화하기(Enable recording)
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;">
+                        화질(Quality):
+                        <select id="recordQuality" style="padding:0.35rem;border-radius:6px;border:1px solid #e6e6e6;">
+                            <option value="medium">중간(Medium)</option>
+                            <option value="low">낮음(Low)</option>
+                            <option value="high">높음(High)</option>
+                        </select>
+                    </label>
+                    <div style="color:#666;font-size:0.85rem;">녹화 시 화면 공유 권한이 요청됩니다.</div>
+                </div>
             </div>
 
             <button class="start-btn" onclick="startGame()" type="button">게임 시작(Start Game)</button>
@@ -274,6 +292,13 @@
                         style="width:80px;padding:0.4rem;border-radius:6px;border:1px solid #e6e6e6;" /></div>
                 <div><label>메모(Memo): </label><input id="detailMemo"
                         style="padding:0.4rem;border-radius:6px;border:1px solid #e6e6e6;" /></div>
+                <div id="detailVideoContainer" style="display:block;margin-top:0.5rem;">
+                    <label>녹화 영상(Video): </label>
+                    <div style="display:flex;flex-direction:column;gap:0.25rem;margin-top:0.25rem;">
+                        <video id="detailVideo" controls style="max-width:100%;display:none;background:#000;border-radius:6px;"></video>
+                        <div id="detailVideoName" style="font-size:0.85rem;color:#444;"></div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer"
                 style="display:flex;gap:0.5rem;justify-content:center;align-items:center;margin-top:1rem;">
