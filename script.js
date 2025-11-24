@@ -1016,7 +1016,6 @@ function updateScore(player, delta) {
     if (gameState.player1Score == player1ScoreBefore && gameState.player2Score == player2ScoreBefore) {
         speakNarration('score', { p1: player1Score, p2: player2Score });
 
-        updateScoreboard();
         const player1Wins = player1ScoreBefore >= gameState.winScore &&
             (player1ScoreBefore - player2ScoreBefore) >= 2;
         const player2Wins = player2ScoreBefore >= gameState.winScore &&
@@ -1028,16 +1027,15 @@ function updateScore(player, delta) {
         }
         else {
             // serveChanged가 1: 다음서브, 2면 서브 교체 알림
+            updateScoreboard();
             if (serveChanged == 1) {
                 showNextServeAlert(player);
-                // also announce which side to serve from
-                setTimeout(() => speakServePosition(currentServer), 300);
             }
             else if (serveChanged == 2) {
                 showServeChangeAlert();
-                // also announce which side to serve from
-                setTimeout(() => speakServePosition(currentServer), 300);
             }
+            // also announce which side to serve from
+            setTimeout(() => speakServePosition(currentServer), 300);
         }
     }
     else {
@@ -1101,12 +1099,14 @@ function checkSetEnd() {
 // 세트 종료
 function endSet(winner) {
     gameState.state = 'setEnd';
+    const neededSets = Math.ceil(gameState.totalSets / 2);
+
     if (winner === 1) {
         gameState.player1Sets++;
-        speakNarration('setWin', { player: 1 });
+        // speakNarration('setWin', { player: 1 });
     } else {
         gameState.player2Sets++;
-        speakNarration('setWin', { player: 2 });
+        // speakNarration('setWin', { player: 2 });
     }
 
     updateScoreboard();
@@ -1132,7 +1132,6 @@ function endSet(winner) {
     } catch (e) { console.warn('set history save failed', e); }
 
     // 게임 종료 확인
-    const neededSets = Math.ceil(gameState.totalSets / 2);
     if (gameState.player1Sets >= neededSets || gameState.player2Sets >= neededSets) {
         // stop recording if active, then attach filename to the latest history entry and end game
         stopRecording().then(filename => {
