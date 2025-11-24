@@ -58,14 +58,14 @@ async function convertWebmToMp4(webmBlob, filename) {
         const { FFmpeg, fetchFile } = FFmpeg;
         const ffmpeg = new FFmpeg.FFmpeg();
         if (!ffmpeg.isLoaded()) await ffmpeg.load();
-        
+
         // Show progress modal
         const modal = document.getElementById('recordingProgressModal');
         if (modal) modal.classList.add('active');
-        
+
         const inputName = 'input.webm';
         const outputName = filename.replace('.webm', '.mp4');
-        
+
         // Set up progress listener
         ffmpeg.on('progress', (e) => {
             const progress = Math.round((e.progress || 0) * 100);
@@ -74,17 +74,17 @@ async function convertWebmToMp4(webmBlob, filename) {
             if (progressBar) progressBar.style.width = progress + '%';
             if (progressText) progressText.textContent = progress + '%';
         });
-        
+
         await ffmpeg.writeFile(inputName, await fetchFile(webmBlob));
         await ffmpeg.exec(['-i', inputName, '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'aac', outputName]);
         const mp4Data = await ffmpeg.readFile(outputName);
         const mp4Blob = new Blob([mp4Data.buffer], { type: 'video/mp4' });
         await ffmpeg.deleteFile(inputName);
         await ffmpeg.deleteFile(outputName);
-        
+
         // Hide progress modal
         if (modal) modal.classList.remove('active');
-        
+
         return { blob: mp4Blob, filename: outputName };
     } catch (e) {
         console.warn('convertWebmToMp4 failed', e);
@@ -212,7 +212,7 @@ function startRecording() {
                 try { await saveVideoToDB(filename, saveBlob); } catch (e) { console.warn('saveVideoToDB failed', e); }
                 // keep in-session objectURL
                 try { const url = URL.createObjectURL(saveBlob); gameState.recordings[filename] = url; } catch (e) { console.warn(e); }
-                
+
                 // trigger download (iOS will allow save to Files/Photos from download)
                 try {
                     const a = document.createElement('a');
@@ -223,7 +223,7 @@ function startRecording() {
                     a.click();
                     a.remove();
                     setTimeout(() => URL.revokeObjectURL(url), 5000);
-                    
+
                     // show save confirmation
                     showSaveConfirm(filename);
                 } catch (e) { console.warn('download video failed', e); }
@@ -243,7 +243,7 @@ function stopRecording() {
                 // after onstop handler above runs, currentRecordingFilename should be set
                 const fn = currentRecordingFilename;
                 // stop tracks
-                try { if (recordingStream) recordingStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+                try { if (recordingStream) recordingStream.getTracks().forEach(t => t.stop()); } catch (e) { }
                 mediaRecorder = null; recordingStream = null; recordedChunks = [];
                 resolve(fn || null);
             }, { once: true });
@@ -469,9 +469,9 @@ function renderSavedNamesList() {
         const row = document.createElement('div');
         row.style.display = 'flex'; row.style.alignItems = 'center'; row.style.justifyContent = 'space-between'; row.style.padding = '0.35rem 0';
         const label = document.createElement('div'); label.textContent = n; label.style.flex = '1';
-        const actions = document.createElement('div'); actions.style.display='flex'; actions.style.gap='6px';
-        const editBtn = document.createElement('button'); editBtn.textContent = '편집'; editBtn.className='modal-action'; editBtn.onclick = () => editSavedName(idx);
-        const delBtn = document.createElement('button'); delBtn.textContent = '삭제'; delBtn.className='modal-action'; delBtn.onclick = () => { if(confirm('삭제하시겠습니까?')) { deleteSavedName(idx); } };
+        const actions = document.createElement('div'); actions.style.display = 'flex'; actions.style.gap = '6px';
+        const editBtn = document.createElement('button'); editBtn.textContent = '편집'; editBtn.className = 'modal-action'; editBtn.onclick = () => editSavedName(idx);
+        const delBtn = document.createElement('button'); delBtn.textContent = '삭제'; delBtn.className = 'modal-action'; delBtn.onclick = () => { if (confirm('삭제하시겠습니까?')) { deleteSavedName(idx); } };
         actions.appendChild(editBtn); actions.appendChild(delBtn);
         row.appendChild(label); row.appendChild(actions);
         container.appendChild(row);
@@ -492,7 +492,7 @@ function editSavedName(idx) {
 
 function deleteSavedName(idx) {
     const list = loadSavedNames();
-    list.splice(idx,1);
+    list.splice(idx, 1);
     saveSavedNames(list);
     renderSavedNamesList();
 }
@@ -543,7 +543,7 @@ function renderVoiceLanguage() {
 }
 
 function voiceLanguage() {
-//    renderVoiceLanguage();
+    //    renderVoiceLanguage();
     const modal = document.getElementById('voiceLanguage');
     if (modal) modal.classList.add('active');
 }
@@ -614,7 +614,7 @@ function applyHistoryFilters() {
     const list = (gameState.matchHistory || []).filter(e => {
         let ok = true;
         if (dateVal) ok = ok && (e.date === new Date(dateVal).toLocaleDateString('ko-KR'));
-        if (playerVal) ok = ok && ( (e.player1 && e.player1.toLowerCase().includes(playerVal)) || (e.player2 && e.player2.toLowerCase().includes(playerVal)) );
+        if (playerVal) ok = ok && ((e.player1 && e.player1.toLowerCase().includes(playerVal)) || (e.player2 && e.player2.toLowerCase().includes(playerVal)));
         if (gameVal) ok = ok && (e.game === gameVal);
         return ok;
     });
@@ -694,16 +694,16 @@ function closeHistoryDetail() {
 }
 
 function saveHistoryDetail() {
-    const idx = parseInt(document.getElementById('historyDetailModal').dataset.idx,10);
+    const idx = parseInt(document.getElementById('historyDetailModal').dataset.idx, 10);
     if (isNaN(idx)) return;
     const rec = (gameState.matchHistory || [])[idx]; if (!rec) return;
     rec.time = document.getElementById('detailTime').value;
     rec.game = document.getElementById('detailGame').value;
     rec.player1 = document.getElementById('detailP1').value;
-    rec.score1 = parseInt(document.getElementById('detailS1').value,10) || 0;
+    rec.score1 = parseInt(document.getElementById('detailS1').value, 10) || 0;
     rec.player2 = document.getElementById('detailP2').value;
-    rec.score2 = parseInt(document.getElementById('detailS2').value,10) || 0;
-    rec.set = parseInt(document.getElementById('detailSet').value,10) || rec.set;
+    rec.score2 = parseInt(document.getElementById('detailS2').value, 10) || 0;
+    rec.set = parseInt(document.getElementById('detailSet').value, 10) || rec.set;
     rec.memo = document.getElementById('detailMemo').value;
     saveHistoryToStorage();
     closeHistoryDetail();
@@ -712,9 +712,9 @@ function saveHistoryDetail() {
 
 function deleteHistoryDetail() {
     if (!confirm('이 기록을 삭제하시겠습니까?')) return;
-    const idx = parseInt(document.getElementById('historyDetailModal').dataset.idx,10);
+    const idx = parseInt(document.getElementById('historyDetailModal').dataset.idx, 10);
     if (isNaN(idx)) return;
-    (gameState.matchHistory || []).splice(idx,1);
+    (gameState.matchHistory || []).splice(idx, 1);
     saveHistoryToStorage();
     closeHistoryDetail();
     renderHistoryList();
@@ -729,7 +729,7 @@ function clearHistory() {
 
 function exportHistory() {
     try {
-        const rows = [['일자','시간','경기명','선수이름','점수','선수이름','점수','세트 번호','메모']];
+        const rows = [['일자', '시간', '경기명', '선수이름', '점수', '선수이름', '점수', '세트 번호', '메모']];
         (gameState.matchHistory || []).forEach(e => rows.push([e.date, e.time, e.game, e.player1, e.score1, e.player2, e.score2, e.set, e.memo || '']));
         const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
         // Add UTF-8 BOM (\uFEFF) at the beginning so Excel recognizes Korean text properly
@@ -799,7 +799,7 @@ function startGame() {
     gameState.player2Sets = 0;
     gameState.scoreHistory = [];
 
-    serveChangeRule = 2; // 예: 2점마다 서브 교체 (게임 설정에서 받아옴)
+    serveChangeRule = 1; // 예: 2점마다 서브 교체 (게임 설정에서 받아옴)
     totalPoints = 0;     // 두 선수 점수 합
     currentServer = 1;  // 1번 또는 2번 플레이어가 서브권
     ServerCount = 1;    // 배드민턴 서브 규칙 (처음만 1인 서브 교체)
@@ -813,8 +813,10 @@ function startGame() {
     if (gameState.selectedGame == 'pingpong') {
         // serveChangeRule = isSingle ? 2 : 5; // 단식 2점, 복식 5점마다 서브 교체
         serveChangeRule = 2; // 단식, 복식 2점마다 서브 교체
-    } else if (gameState.selectedGame == 'badminton' || gameState.selectedGame == 'pickleball') {
-        serveChangeRule = isSingle ? 1 : 2; // 단식 1점, 복식 2점마다 서브 교체
+    } else if (gameState.selectedGame == 'badminton') {
+        serveChangeRule = 1; // 단복식 1점 (랠리포인트 방식) 서브 교체
+    } else if (gameState.selectedGame == 'pickleball') {
+        serveChangeRule = isSingle ? 1 : 2; // 단식 1회, 복식 2회 마다 서브 교체
     }
 
     const langSelect = document.getElementById('voiceLangSelect');
@@ -882,6 +884,7 @@ function showScreen(screenId) {
 function updateScoreboard() {
     document.getElementById('score1').textContent = gameState.player1Score;
     document.getElementById('score2').textContent = gameState.player2Score;
+
     document.getElementById('player1SetsInline').textContent = gameState.player1Sets;
     document.getElementById('player2SetsInline').textContent = gameState.player2Sets;
     // 선수 이름 UI 반영
@@ -915,9 +918,6 @@ function increaseScore(player) {
 
 function updateScore(player, delta) {
     if (lastAction != 'endSet') return;
-
-    // console.log('updateScore lastAction : ', lastAction);
-
     lastAction = 'updateScore'; // Keep formatting consistent
 
     totalPoints = gameState.player1Score + gameState.player2Score;
@@ -939,21 +939,36 @@ function updateScore(player, delta) {
 
     // 서브권 계산
     if (totalPoints === 0) {
-        if (gameState.selectedGame == 'badminton' || gameState.selectedGame == 'pickleball') {
-            currentServer = 1; // 첫 서브는 1번 플레이어
-            serveChanged = currentServer == player ? 0 : 2;
+        if (gameState.selectedGame == 'pickleball') {
+            if (currentServer == player) {
+                serveChanged = 0; // 첫 서브는 점수 올린 플레이어
+                gameState.player1Score = player1ScoreBefore;
+                gameState.player2Score = player2ScoreBefore;
+            } else {
+                serveChanged = 2;
+            }
+            currentServer = 1;      // 첫 서브만 1번 플레이어
             currentServer = player; // 서브권을 점수 올린 플레이어로 변경
             ServerCount = 2;
         }
     } else {
-        if (gameState.selectedGame == 'badminton' || gameState.selectedGame == 'pickleball') {
+        if (gameState.selectedGame == 'pickleball') {
             if (gameState.matchType === 'single') {
                 // 단식인 경우 바로 서브 교체
-                serveChanged = currentServer == player ? 0 : 2;
-                currentServer = player; // 서브권을 점수 올린 플레이어로 변경
+                if (currentServer == player) {
+                    serveChanged = 0; // 첫 서브는 점수 올린 플레이어
+                    gameState.player1Score = player1ScoreBefore;
+                    gameState.player2Score = player2ScoreBefore;
+                } else {
+                    serveChanged = 2;
+                }
+                currentServer = serverPlayer; // 서브권을 점수 올린 플레이어로 변경
             }
             else {
-                if (currentServer != player) {
+                if (currentServer == player) {
+                    gameState.player1Score = player1ScoreBefore;
+                    gameState.player2Score = player2ScoreBefore;
+                } else {
                     if (ServerCount == 1) {
                         serveChanged = 1;
                         ServerCount = 2;
@@ -967,19 +982,29 @@ function updateScore(player, delta) {
             }
         }
         else if (gameState.selectedGame == 'pingpong') {
+            gameState.player1Score = player1ScoreBefore;
+            gameState.player2Score = player2ScoreBefore;
+            if (ServerCount == 1) {
+                serveChanged = 1;
+                ServerCount = 2;
+            }
+            else if (ServerCount == 2) {
+                ServerCount = 1;        // 서브권이 바뀌었으므로 1로 변경
+                serveChanged = 2;
+                currentServer = currentServer == player1 ? player2 : player1; // 서브권 변경}
+            }
+        }
+        else if (gameState.selectedGame == 'badminton') {
+            gameState.player1Score = player1ScoreBefore;
+            gameState.player2Score = player2ScoreBefore;
             if (currentServer != player) {
-                if (ServerCount == 1) {
-                    serveChanged = 1;
-                    ServerCount = 2;
-                }
-                else if (ServerCount == 2) {
-                    ServerCount = 1;        // 서브권이 바뀌었으므로 1로 변경
-                    serveChanged = 2;
-                    currentServer = player; // 서브권을 점수 올린 플레이어로 변경
-                }
+                currentServer = player;
+                serveChanged = 2;
             }
         }
         else if (gameState.selectedGame == 'Jokgu') {
+            gameState.player1Score = player1ScoreBefore;
+            gameState.player2Score = player2ScoreBefore;
             if (currentServer != player) {
                 currentServer = player;
                 serveChanged = 2;
@@ -988,20 +1013,32 @@ function updateScore(player, delta) {
     }
 
     // speak score using narration templates
-    speakNarration('score', { p1: player1ScoreBefore, p2: player2ScoreBefore });
+    if (gameState.player1Score == player1ScoreBefore && gameState.player2Score == player2ScoreBefore) {
+        speakNarration('score', { p1: player1Score, p2: player2Score });
 
-    gameState.player1Score = player1ScoreBefore;
-    gameState.player2Score = player2ScoreBefore;
-    updateScoreboard();
+        updateScoreboard();
+        const player1Wins = player1ScoreBefore >= gameState.winScore &&
+            (player1ScoreBefore - player2ScoreBefore) >= 2;
+        const player2Wins = player2ScoreBefore >= gameState.winScore &&
+            (player2ScoreBefore - player1ScoreBefore) >= 2;
 
-    const player1Wins = player1ScoreBefore >= gameState.winScore &&
-        (player1ScoreBefore - player2ScoreBefore) >= 2;
-    const player2Wins = player2ScoreBefore >= gameState.winScore &&
-        (player2ScoreBefore - player1ScoreBefore) >= 2;
-
-    if (player1Wins || player2Wins) {
-        const winner = player1Wins ? 1 : 2;
-        endSet(winner);
+        if (player1Wins || player2Wins) {
+            const winner = player1Wins ? 1 : 2;
+            endSet(winner);
+        }
+        else {
+            // serveChanged가 1: 다음서브, 2면 서브 교체 알림
+            if (serveChanged == 1) {
+                showNextServeAlert(player);
+                // also announce which side to serve from
+                setTimeout(() => speakServePosition(currentServer), 300);
+            }
+            else if (serveChanged == 2) {
+                showServeChangeAlert();
+                // also announce which side to serve from
+                setTimeout(() => speakServePosition(currentServer), 300);
+            }
+        }
     }
     else {
         // serveChanged가 1: 다음서브, 2면 서브 교체 알림
@@ -1017,7 +1054,6 @@ function updateScore(player, delta) {
         }
     }
     lastAction = 'endSet';
-    // console.log('updateScore exit lastAction : ', lastAction);
 }
 
 function updateServeColor() {
@@ -1509,7 +1545,7 @@ document.addEventListener('DOMContentLoaded', function () {
     populateCameras();
 
     // allow manual refresh (in case user plugs in camera)
-    try { window.addEventListener('focus', populateCameras); } catch (e) {}
+    try { window.addEventListener('focus', populateCameras); } catch (e) { }
 });
 
 // PWA 지원을 위한 서비스 워커 등록 (일시적으로 비활성화)
