@@ -755,7 +755,7 @@ function getGameDisplayName(code) {
 let serveChangeRule = 2; // 예: 2점마다 서브 교체 (게임 설정에서 받아옴)
 let totalPoints = 0;     // 두 선수 점수 합
 let currentServer = 1;  // 1번 또는 2번 플레이어가 서브권
-let ServerCount = 1;    // 배드민턴 서브 규칙 (처음만 1인 서브 교체)
+let ServerCount = 1;    // 피클볼 서브 규칙 (처음만 1인 서브 교체)
 let ServerChange = 0;   // 서브 교체
 let lastAction = 'endSet';  // default last action
 
@@ -764,9 +764,9 @@ function selectGame(game) {
     console.log('selectGame called with:', game);
     gameState.selectedGame = game;
     const gameNames = {
-        'pickleball': '피클볼',
-        'pingpong': '탁구',
         'badminton': '배드민턴',
+        'pingpong': '탁구',
+        'pickleball': '피클볼',
         'Jokgu': '족구'
 
     };
@@ -947,32 +947,36 @@ function updateScore(player, delta) {
             } else {
                 serveChanged = 2;
             }
-            currentServer = 1;      // 첫 서브만 1번 플레이어
             currentServer = player; // 서브권을 점수 올린 플레이어로 변경
             ServerCount = 2;
         }
-        else{
-                gameState.player1Score = player1ScoreBefore;
-                gameState.player2Score = player2ScoreBefore;
+        else if (gameState.selectedGame == 'pingpong') {
+            ServerCount = 2;      // 첫 서브만 1번 플레이어
+            gameState.player1Score = player1ScoreBefore;
+            gameState.player2Score = player2ScoreBefore;
+        }
+        else {
+            if (currentServer != player) {
+                currentServer = player;
+                ServerCount = 2;
+                serveChanged = 2;
+            }
+            gameState.player1Score = player1ScoreBefore;
+            gameState.player2Score = player2ScoreBefore;
         }
     } else {
         if (gameState.selectedGame == 'pickleball') {
-            if (gameState.matchType === 'single') {
-                // 단식인 경우 바로 서브 교체
-                if (currentServer == player) {
-                    serveChanged = 0; // 첫 서브는 점수 올린 플레이어
-                    gameState.player1Score = player1ScoreBefore;
-                    gameState.player2Score = player2ScoreBefore;
-                } else {
+            if (currentServer == player) {
+                serveChanged = 1; // 첫 서브는 점수 올린 플레이어
+                gameState.player1Score = player1ScoreBefore;
+                gameState.player2Score = player2ScoreBefore;
+            } else {
+                if (gameState.matchType === 'single') {
+                    // 단식인 경우 바로 서브 교체
                     serveChanged = 2;
+                    currentServer = player;     // 서브권을 점수 올린 플레이어로 변경
                 }
-                currentServer = serverPlayer; // 서브권을 점수 올린 플레이어로 변경
-            }
-            else {
-                if (currentServer == player) {
-                    gameState.player1Score = player1ScoreBefore;
-                    gameState.player2Score = player2ScoreBefore;
-                } else {
+                else {
                     if (ServerCount == 1) {
                         serveChanged = 1;
                         ServerCount = 2;
@@ -995,7 +999,7 @@ function updateScore(player, delta) {
             else if (ServerCount == 2) {
                 ServerCount = 1;        // 서브권이 바뀌었으므로 1로 변경
                 serveChanged = 2;
-                currentServer = currentServer == player1 ? player2 : player1; // 서브권 변경}
+                currentServer = currentServer == 1 ? 2 : 1; // 서브권 변경}
             }
         }
         else if (gameState.selectedGame == 'badminton') {
@@ -1033,26 +1037,23 @@ function updateScore(player, delta) {
             // serveChanged가 1: 다음서브, 2면 서브 교체 알림
             updateScoreboard();
             if (serveChanged == 1) {
-                showNextServeAlert(player);
+                // showNextServeAlert(player);
             }
             else if (serveChanged == 2) {
                 showServeChangeAlert();
             }
             // also announce which side to serve from
-            setTimeout(() => speakServePosition(currentServer), 300);
+            // setTimeout(() => speakServePosition(currentServer), 300);
         }
     }
     else {
-        // serveChanged가 1: 다음서브, 2면 서브 교체 알림
+        updateServeColor();
+
         if (serveChanged == 1) {
-            showNextServeAlert(player);
-            // also announce which side to serve from
-            setTimeout(() => speakServePosition(currentServer), 300);
+            // showNextServeAlert(player);
         }
         else if (serveChanged == 2) {
             showServeChangeAlert();
-            // also announce which side to serve from
-            setTimeout(() => speakServePosition(currentServer), 300);
         }
     }
     lastAction = 'endSet';
@@ -1068,7 +1069,7 @@ function showServeChangeAlert() {
     const alert = document.createElement('div');
     alert.className = 'serve-change-alert';
     alert.textContent = '서브 교체\nServe change !';
-    speakNarration('serveChange');
+    // speakNarration('serveChange');
     document.body.appendChild(alert);
     setTimeout(() => alert.remove(), 1500); // 1.5초 후 자동 제거
 }
@@ -1082,7 +1083,7 @@ function showNextServeAlert(serverPlayer) {
     const textContent = sideKey === '오른쪽' ? 'right' : 'left';
     alert.textContent = '다음 서브' + getSideLocalized(sideKey) + '\nNext Serve \n' + textContent;
 
-    speakNarration('Nextserve', { sideKey });
+    // speakNarration('Nextserve', { sideKey });
     document.body.appendChild(alert);
     setTimeout(() => alert.remove(), 1500); // 1.5초 후 자동 제거
 }
