@@ -951,6 +951,10 @@ function updateScore(player, delta) {
             currentServer = player; // 서브권을 점수 올린 플레이어로 변경
             ServerCount = 2;
         }
+        else{
+                gameState.player1Score = player1ScoreBefore;
+                gameState.player2Score = player2ScoreBefore;
+        }
     } else {
         if (gameState.selectedGame == 'pickleball') {
             if (gameState.matchType === 'single') {
