@@ -1256,8 +1256,8 @@ function speakScore(text) {
             speechUtterance.voice = speechSynthesis.getVoices().find(voice => voice.lang === 'en-US' && voice.name === 'Samantha');
         }
         speechUtterance.lang = gameState.selectedLang;
-        speechUtterance.rate = 1.2;
-        speechUtterance.pitch = 1.5;
+        speechUtterance.rate = 1.0;
+        speechUtterance.pitch = 1.3;
 
         // 가능한 음성 중에서 선택된 언어와 매칭되는 음성 찾기
         try {
