@@ -304,7 +304,7 @@ function getNarrationText(key, vars) {
     if (!narrations[key]) return '';
 
     // Special case for score in Korean to speak '십 대 ...' style when a player has 10
-    if (key === 'score' && lang === 'ko') {
+    if (key === 'score' && vars) {
         const p1 = vars.p1, p2 = vars.p2;
         if (p1 === 10 || p2 === 10) {
             if (p1 === 10 && p2 !== 10) return `십 대 ${p2}`;
