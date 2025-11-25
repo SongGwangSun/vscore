@@ -274,7 +274,7 @@ if (speechSynthesis) {
 // Narration templates (multi-language)
 const narrations = {
     gameStart: { ko: '게임 시작!', en: 'Game start!' },
-    score: { ko: '{p1} 대 {p2}', en: '{p1} to {p2}' },
+    score: { ko: '{p1} 대 {p2}', en: '{p1}   {p2}' },
     Nextserve: { ko: '다음 서브!', en: 'Next Serve!' },
     right: { ko: '오른쪽!', en: 'Right' },
     left: { ko: '왼쪽!', en: 'Left !' },
@@ -306,10 +306,37 @@ function getNarrationText(key, vars) {
     // Special case for score in Korean to speak '십 대 ...' style when a player has 10
     if (key === 'score' && vars) {
         const p1 = vars.p1, p2 = vars.p2;
-        if (p1 === 10 || p2 === 10) {
-            if (p1 === 10 && p2 !== 10) return `십 대 ${p2}`;
-            if (p2 === 10 && p1 !== 10) return `${p1} 대 십`;
-            return `십 대 십`;
+        if (lang == 'ko') {
+            if (p1 === 10 || p2 === 10) {
+                if (p1 === 10 && p2 !== 10) return `십 대 ${p2}`;
+                if (p2 === 10 && p1 !== 10) return `${p1} 대 십`;
+                return `십 대 십 동점`;
+            }
+            if (p1 === p2) {
+                return `${p1} 대 ${p2} 동점`;
+            }
+            if (gameState.selectedGame == 'pingpong') {
+                if(currentServer == 2) {    
+                    p1, p2 = p2, p1;
+                }
+            }
+            return `${p1} 대 ${p2}`;
+        }
+        else {
+            if (gameState.selectedGame == 'pingpong') {
+                if(currentServer == 2) {
+                    p1, p2 = p2, p1;
+                }
+                if (p1 == p2) {
+                    return `${p1} all`;
+                }
+                if (p1 == 0) {
+                    return `love ${p2}`;
+                }
+                if (p2 == 0) {
+                    return `${p2} love`;
+                }
+            }
         }
     }
 
@@ -1022,7 +1049,7 @@ function updateScore(player, delta) {
 
     // speak score using narration templates
     if (gameState.player1Score == player1ScoreBefore && gameState.player2Score == player2ScoreBefore) {
-        speakNarration('score', { p1: player1Score, p2: player2Score });
+        speakNarration('score', { p1: player1ScoreBefore, p2: player2ScoreBefore });
 
         const player1Wins = player1ScoreBefore >= gameState.winScore &&
             (player1ScoreBefore - player2ScoreBefore) >= 2;
