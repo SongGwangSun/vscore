@@ -274,7 +274,7 @@ if (speechSynthesis) {
 // Narration templates (multi-language)
 const narrations = {
     gameStart: { ko: '게임 시작!', en: 'Game start!' },
-    score: { ko: '{p1} 대 {p2}', en: '{p1}   {p2}' },
+    score: { ko: '{p1} 대 {p2}', en: '{p1} ,  {p2}' },
     Nextserve: { ko: '다음 서브!', en: 'Next Serve!' },
     right: { ko: '오른쪽!', en: 'Right' },
     left: { ko: '왼쪽!', en: 'Left !' },
@@ -306,28 +306,29 @@ function getNarrationText(key, vars) {
     // Special case for score in Korean to speak '십 대 ...' style when a player has 10
     if (key === 'score' && vars) {
         const p1 = vars.p1, p2 = vars.p2;
+        if (gameState.selectedGame != 'Jokgu' && currentServer == 2) {
+            p1, p2 = p2, p1;
+        }
         if (lang == 'ko') {
+            const voiceval = '';
             if (p1 === 10 || p2 === 10) {
-                if (p1 === 10 && p2 !== 10) return `십 대 ${p2}`;
-                if (p2 === 10 && p1 !== 10) return `${p1} 대 십`;
-                return `십 대 십 동점`;
+                if (p1 === 10 && p2 !== 10) voiceval = `십 대 ${p2}`;
+                if (p2 === 10 && p1 !== 10) voiceval = `${p1} 대 십`;
+                voiceval = `십 대 십 동점`;
             }
             if (p1 === p2) {
-                return `${p1} 대 ${p2} 동점`;
+                voiceval = `${p1} 대 ${p2} 동점`;
             }
-            if (gameState.selectedGame == 'pingpong') {
-                if(currentServer == 2) {    
-                    p1, p2 = p2, p1;
-                }
+            voiceval = `${p1} 대 ${p2}`;
+            if(gameState.selectedGame == 'pickleball') {
+                voiceval = voiceval + ServerCount + '번 서브';
             }
-            return `${p1} 대 ${p2}`;
+            return voiceval;
         }
         else {
-            if (gameState.selectedGame == 'pingpong') {
-                if(currentServer == 2) {
-                    p1, p2 = p2, p1;
-                }
+            if (gameState.selectedGame == 'pingpong' || gameState.selectedGame == 'badminton') {
                 if (p1 == p2) {
+                    if(p1 == 0) return 'love all';
                     return `${p1} all`;
                 }
                 if (p1 == 0) {
@@ -1251,9 +1252,12 @@ function speakScore(text) {
         console.log('speakScore text:', text, 'selectedLang:', gameState.selectedLang);
 
         speechUtterance = new SpeechSynthesisUtterance(text);
+        if(!gameState.selectedLang === 'en-US'){
+            speechUtterance.voice = speechSynthesis.getVoices().find(voice => voice.lang === 'en-US' && voice.name === 'Samantha');
+        }
         speechUtterance.lang = gameState.selectedLang;
-        speechUtterance.rate = 0.85;
-        speechUtterance.pitch = 1.0;
+        speechUtterance.rate = 1.2;
+        speechUtterance.pitch = 1.5;
 
         // 가능한 음성 중에서 선택된 언어와 매칭되는 음성 찾기
         try {
