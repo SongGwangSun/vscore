@@ -305,12 +305,12 @@ function getNarrationText(key, vars) {
 
     // Special case for score in Korean to speak '십 대 ...' style when a player has 10
     if (key === 'score' && vars) {
-        const p1 = vars.p1, p2 = vars.p2;
+        let p1 = vars.p1, p2 = vars.p2;
         if (gameState.selectedGame != 'Jokgu' && currentServer == 2) {
             p1, p2 = p2, p1;
         }
         if (lang == 'ko') {
-            const voiceval = '';
+            let voiceval = '';
             if (p1 === 10 || p2 === 10) {
                 if (p1 === 10 && p2 !== 10) voiceval = `십 대 ${p2}`;
                 if (p2 === 10 && p1 !== 10) voiceval = `${p1} 대 십`;
@@ -318,8 +318,8 @@ function getNarrationText(key, vars) {
             }
             if (p1 === p2) {
                 voiceval = `${p1} 대 ${p2} 동점`;
-            }
-            voiceval = `${p1} 대 ${p2}`;
+            } else
+                voiceval = `${p1} 대 ${p2}`;
             if(gameState.selectedGame == 'pickleball') {
                 voiceval = voiceval + ServerCount + '번 서브';
             }
