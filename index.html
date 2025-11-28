@@ -163,6 +163,7 @@
             <button class="control-btn" onclick="resetSet()" type="button" title="세트 리셋(Set reset)">🔄</button>
             <button class="control-btn" onclick="undoLastScore()" type="button" title="실수 수정(Score undo)">↩️</button>
             <button class="control-btn" onclick="switchCourt()" type="button" title="코트 교체(Change court)">🔃</button>
+            <button id="pauseRecordingBtn" class="control-btn" onclick="toggleRecordingPause()" type="button" style="display:none;" title="녹화 일시 정지(Pause Recording)">⏸️</button>
             <button class="control-btn" onclick="showHistory()" type="button" title="History">📜</button>
             <button class="control-btn" onclick="showAbout()" type="button" title="About">ℹ️</button>
         </div>
@@ -364,6 +365,37 @@
             </div>
             <div class="modal-footer" style="display:flex;gap:0.5rem;justify-content:center;margin-top:1rem;">
                 <button class="modal-action" onclick="closeSaveConfirm()">확인(OK)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recording Preview Modal -->
+    <div id="recordingPreviewModal" class="modal">
+        <div class="modal-content" style="max-width:90vw;max-height:90vh;">
+            <button class="modal-close" onclick="closeRecordingPreview()" aria-label="닫기(Close)">&times;</button>
+            <h3 style="margin-top:0;">녹화 중인 영상 미리보기(Recording Preview)</h3>
+            <div style="margin:1rem 0;">
+                <video id="previewVideo" controls style="width:100%;max-height:60vh;background:#000;border-radius:8px;"></video>
+            </div>
+            <div style="display:flex;gap:0.5rem;align-items:center;justify-content:center;flex-wrap:wrap;margin:1rem 0;">
+                <label style="display:flex;align-items:center;gap:6px;">
+                    재생 속도(Playback Speed):
+                    <select id="playbackSpeed" onchange="changePlaybackSpeed(this.value)" style="padding:0.4rem;border-radius:6px;border:1px solid #e6e6e6;">
+                        <option value="0.25">0.25x (슬로우)</option>
+                        <option value="0.5">0.5x (슬로우)</option>
+                        <option value="0.75">0.75x</option>
+                        <option value="1.0" selected>1.0x (일반)</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2.0">2.0x (빠름)</option>
+                    </select>
+                </label>
+            </div>
+            <div style="font-size:0.85rem;color:#666;margin:0.5rem 0;text-align:center;">
+                녹화를 재개하려면 닫기 버튼을 누르고 일시 정지 버튼을 다시 누르세요.
+            </div>
+            <div class="modal-footer" style="display:flex;gap:0.5rem;justify-content:center;margin-top:1rem;">
+                <button class="modal-action" onclick="closeRecordingPreview()">닫기(Close)</button>
             </div>
         </div>
     </div>

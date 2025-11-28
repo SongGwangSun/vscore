@@ -30,6 +30,8 @@ let mediaRecorder = null;
 let recordingStream = null;
 let recordedChunks = [];
 let currentRecordingFilename = null;
+let recordingState = 'stopped'; // 'stopped', 'recording', 'paused'
+let previewVideoBlob = null; // 현재까지 녹화된 영상 미리보기용
 // cache of filename -> objectURL for playback (in-session) and loaded from IndexedDB
 gameState.recordings = gameState.recordings || {};
 
@@ -185,7 +187,17 @@ function startRecording() {
                 try { mediaRecorder = new MediaRecorder(stream); } catch (err) { console.warn('MediaRecorder unsupported', err); return null; }
             }
             mediaRecorder.ondataavailable = function (e) { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
+            mediaRecorder.onpause = function () {
+                recordingState = 'paused';
+                updateRecordingButton();
+            };
+            mediaRecorder.onresume = function () {
+                recordingState = 'recording';
+                updateRecordingButton();
+            };
             mediaRecorder.onstop = async function () {
+                recordingState = 'stopped';
+                updateRecordingButton();
                 const webmBlob = new Blob(recordedChunks, { type: 'video/webm' });
                 const now = new Date();
                 const stamp = now.toISOString().replace(/[:-]/g, '').replace(/\.\d+Z$/, '');
@@ -229,9 +241,110 @@ function startRecording() {
                 } catch (e) { console.warn('download video failed', e); }
             };
             mediaRecorder.start();
+            recordingState = 'recording';
+            updateRecordingButton();
             return true;
         }).catch(e => { console.warn('getUserMedia failed', e); return null; });
     } catch (err) { console.warn('startRecording error', err); return Promise.resolve(null); }
+}
+
+function pauseRecording() {
+    if (!mediaRecorder || recordingState !== 'recording') return;
+    try {
+        if (mediaRecorder.state === 'recording') {
+            mediaRecorder.pause();
+            // 현재까지 녹화된 영상을 미리보기용으로 저장
+            if (recordedChunks.length > 0) {
+                previewVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+            }
+        }
+    } catch (e) {
+        console.warn('pauseRecording failed', e);
+    }
+}
+
+function resumeRecording() {
+    if (!mediaRecorder || recordingState !== 'paused') return;
+    try {
+        if (mediaRecorder.state === 'paused') {
+            mediaRecorder.resume();
+        }
+    } catch (e) {
+        console.warn('resumeRecording failed', e);
+    }
+}
+
+function toggleRecordingPause() {
+    if (recordingState === 'recording') {
+        pauseRecording();
+        showRecordingPreview();
+    } else if (recordingState === 'paused') {
+        resumeRecording();
+        closeRecordingPreview();
+    }
+}
+
+function updateRecordingButton() {
+    const btn = document.getElementById('pauseRecordingBtn');
+    if (!btn) return;
+    
+    if (recordingState === 'recording') {
+        btn.style.display = '';
+        btn.innerHTML = '⏸️';
+        btn.title = '녹화 일시 정지(Pause Recording)';
+    } else if (recordingState === 'paused') {
+        btn.style.display = '';
+        btn.innerHTML = '▶️';
+        btn.title = '녹화 재개(Resume Recording)';
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+function showRecordingPreview() {
+    if (!previewVideoBlob) {
+        // recordedChunks에서 직접 생성
+        if (recordedChunks.length === 0) {
+            alert('아직 녹화된 영상이 없습니다.');
+            return;
+        }
+        previewVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+    }
+    
+    const modal = document.getElementById('recordingPreviewModal');
+    const videoEl = document.getElementById('previewVideo');
+    if (!modal || !videoEl) return;
+    
+    const url = URL.createObjectURL(previewVideoBlob);
+    videoEl.src = url;
+    videoEl.playbackRate = 1.0; // 기본 재생 속도
+    document.getElementById('playbackSpeed').value = '1.0';
+    
+    modal.classList.add('active');
+}
+
+function closeRecordingPreview() {
+    const modal = document.getElementById('recordingPreviewModal');
+    const videoEl = document.getElementById('previewVideo');
+    if (modal) modal.classList.remove('active');
+    if (videoEl) {
+        videoEl.pause();
+        if (videoEl.src) {
+            URL.revokeObjectURL(videoEl.src);
+            videoEl.src = '';
+        }
+    }
+    // 모달을 닫으면 녹화를 자동으로 재개
+    if (recordingState === 'paused') {
+        resumeRecording();
+    }
+}
+
+function changePlaybackSpeed(speed) {
+    const videoEl = document.getElementById('previewVideo');
+    if (videoEl) {
+        videoEl.playbackRate = parseFloat(speed);
+    }
 }
 
 function stopRecording() {
@@ -245,10 +358,22 @@ function stopRecording() {
                 // stop tracks
                 try { if (recordingStream) recordingStream.getTracks().forEach(t => t.stop()); } catch (e) { }
                 mediaRecorder = null; recordingStream = null; recordedChunks = [];
+                recordingState = 'stopped';
+                previewVideoBlob = null;
+                updateRecordingButton();
                 resolve(fn || null);
             }, { once: true });
             // stop recorder (triggers onstop)
-            if (mediaRecorder.state !== 'inactive') mediaRecorder.stop(); else resolve(currentRecordingFilename || null);
+            if (mediaRecorder.state !== 'inactive') {
+                if (mediaRecorder.state === 'paused') {
+                    mediaRecorder.resume(); // 일시 정지 상태면 먼저 재개
+                }
+                mediaRecorder.stop();
+            } else {
+                recordingState = 'stopped';
+                updateRecordingButton();
+                resolve(currentRecordingFilename || null);
+            }
         } catch (e) { console.warn('stopRecording failed', e); resolve(null); }
     });
 }
