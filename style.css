@@ -1186,6 +1186,276 @@ body.android .end-btn {
 	.vs-divider { display: none; }
 }
 
+/* --- Modern scoreboard header layout --- */
+#scoreboard.scoreboard-modern {
+    background: radial-gradient(circle at top, #10172a 0%, #050914 60%, #030509 100%);
+    color: #f8fafc;
+    padding: 1.5rem 1rem;
+    gap: 1rem;
+}
+
+#scoreboard.scoreboard-modern .scoreboard-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.header-game-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.header-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+}
+
+.header-game-info strong {
+    font-size: 1.1rem;
+    letter-spacing: 0.04em;
+}
+
+.pause-btn {
+    background: linear-gradient(180deg,#fbbf24,#f87171);
+    border: none;
+    border-radius: 12px;
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem;
+    color: #111827;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(251,191,36,0.25);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.pause-btn.is-paused {
+    background: linear-gradient(180deg,#34d399,#22d3ee);
+}
+
+.pause-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pause-btn:not(:disabled):active {
+    transform: translateY(2px);
+    box-shadow: none;
+}
+
+.header-times {
+    display: flex;
+    gap: 1rem;
+}
+
+.time-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 80px;
+}
+
+.time-label {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    letter-spacing: 0.06em;
+}
+
+.time-block strong {
+    font-size: 1.2rem;
+    letter-spacing: 0.08em;
+}
+
+.header-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.35rem;
+    flex: 1;
+}
+
+.header-center .team-name {
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #c7d2fe;
+}
+
+.set-score-display {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+}
+
+.menu-icon-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #f8fafc;
+    border-radius: 12px;
+    width: 52px;
+    height: 52px;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.menu-icon-btn:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+}
+
+.scoreboard-body {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+    flex: 1;
+}
+
+.score-card {
+    flex: 1;
+    border-radius: 32px;
+    padding: 1.2rem;
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+    border: 1px solid rgba(148,163,184,0.25);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 18px 35px rgba(2,6,23,0.35);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.score-card.team1 {
+    background: linear-gradient(160deg, rgba(78,67,209,0.65), rgba(30,27,75,0.8));
+}
+
+.score-card.team2 {
+    background: linear-gradient(200deg, rgba(234,88,12,0.65), rgba(88,28,135,0.78));
+}
+
+.score-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 24px 40px rgba(2,6,23,0.45);
+}
+
+.team-label {
+    font-size: 1.1rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #fef9c3;
+    margin-bottom: 0.8rem;
+}
+
+.score-display {
+    font-size: clamp(4.5rem, 20vw, 10rem);
+    font-weight: 900;
+    line-height: 1;
+    text-shadow: 0 12px 30px rgba(0,0,0,0.35);
+}
+
+.score-display.score-animate {
+    animation: flipScore 0.6s ease;
+}
+
+@keyframes flipScore {
+    0% { transform: rotateX(90deg); opacity: 0; }
+    50% { transform: rotateX(-25deg); opacity: 1; }
+    100% { transform: rotateX(0); }
+}
+
+.set-indicator {
+    margin-top: 0.5rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+    color: #e2e8f0;
+}
+
+.score-divider {
+    width: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    color: #94a3b8;
+}
+
+.vs-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.4em;
+}
+
+.serve-indicator {
+    padding: 0.4rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid rgba(148,163,184,0.4);
+    background: rgba(15,23,42,0.6);
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+#scoreboard.scoreboard-modern .control-buttons {
+    position: relative;
+    width: 100%;
+    background: transparent;
+    border-top: none;
+    box-shadow: none;
+    padding: 0.5rem 0;
+    margin-top: 0.5rem;
+}
+
+#scoreboard.scoreboard-modern .control-btn {
+    background: rgba(15,23,42,0.85);
+    border-radius: 16px;
+    border: 1px solid rgba(148,163,184,0.35);
+    width: 52px;
+    height: 52px;
+    box-shadow: 0 10px 25px rgba(2,6,23,0.45);
+}
+
+@media (max-width: 900px) {
+    .scoreboard-body {
+        flex-direction: column;
+    }
+    .score-divider {
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-between;
+    }
+    .score-card {
+        width: 100%;
+    }
+    .header-left {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .header-times {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+
 /* consolidated .player-set-score defined in Modern UI overrides */
 
 /* Duplicate modal rules removed; consolidated modal styles appear later in the file. */

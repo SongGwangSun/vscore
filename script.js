@@ -34,6 +34,10 @@ let recordingState = 'stopped'; // 'stopped', 'recording', 'paused'
 let previewVideoBlob = null; // 현재까지 녹화된 영상 미리보기용
 // cache of filename -> objectURL for playback (in-session) and loaded from IndexedDB
 gameState.recordings = gameState.recordings || {};
+let matchStartTime = null;
+let matchElapsedBeforePause = 0;
+let matchTimerInterval = null;
+let realtimeClockInterval = null;
 
 // FFmpeg initialization
 let ffmpegReady = false;
@@ -392,6 +396,138 @@ function changePlaybackSpeed(speed) {
     if (videoEl) {
         videoEl.playbackRate = parseFloat(speed);
     }
+}
+
+function startRealtimeClock() {
+    stopRealtimeClock();
+    updateRealtimeClockDisplay();
+    realtimeClockInterval = setInterval(updateRealtimeClockDisplay, 1000);
+}
+
+function stopRealtimeClock(resetDisplay = false) {
+    if (realtimeClockInterval) {
+        clearInterval(realtimeClockInterval);
+        realtimeClockInterval = null;
+    }
+    if (resetDisplay) {
+        const currentTimeEl = document.getElementById('currentTimeDisplay');
+        if (currentTimeEl) currentTimeEl.textContent = '--:--';
+    }
+}
+
+function updateRealtimeClockDisplay() {
+    const currentTimeEl = document.getElementById('currentTimeDisplay');
+    if (!currentTimeEl) return;
+    const now = new Date();
+    currentTimeEl.textContent = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function startMatchTimer() {
+    stopMatchTimer();
+    updateElapsedTimeDisplay();
+    matchTimerInterval = setInterval(updateElapsedTimeDisplay, 1000);
+}
+
+function stopMatchTimer() {
+    if (matchTimerInterval) {
+        clearInterval(matchTimerInterval);
+        matchTimerInterval = null;
+    }
+}
+
+function updateElapsedTimeDisplay() {
+    const elapsedEl = document.getElementById('elapsedTimeDisplay');
+    if (!elapsedEl) return;
+    const elapsedMs = matchElapsedBeforePause + (matchStartTime ? (Date.now() - matchStartTime) : 0);
+    elapsedEl.textContent = formatDuration(elapsedMs);
+}
+
+function formatDuration(ms) {
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const pad = (num) => String(num).padStart(2, '0');
+    return hours > 0 ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}` : `${pad(minutes)}:${pad(seconds)}`;
+}
+
+function stopGameTimers(resetDisplays = false, resetElapsedState = false) {
+    stopRealtimeClock(resetDisplays);
+    stopMatchTimer();
+    if (resetDisplays) {
+        const elapsedEl = document.getElementById('elapsedTimeDisplay');
+        if (elapsedEl) elapsedEl.textContent = '00:00';
+    }
+    if (resetElapsedState) {
+        matchStartTime = null;
+        matchElapsedBeforePause = 0;
+    }
+}
+
+function updateGameHeader() {
+    const gameNameEl = document.getElementById('liveGameName');
+    if (gameNameEl) gameNameEl.textContent = getGameDisplayName(gameState.selectedGame) || '게임 대기';
+
+    const team1Header = document.getElementById('team1HeaderName');
+    if (team1Header) team1Header.textContent = gameState.player1Name;
+    const team2Header = document.getElementById('team2HeaderName');
+    if (team2Header) team2Header.textContent = gameState.player2Name;
+
+    const team1Label = document.getElementById('team1Label');
+    if (team1Label) team1Label.textContent = gameState.player1Name;
+    const team2Label = document.getElementById('team2Label');
+    if (team2Label) team2Label.textContent = gameState.player2Name;
+
+    const setScoreHeader = document.getElementById('setScoreHeader');
+    if (setScoreHeader) setScoreHeader.textContent = `${gameState.player1Sets} : ${gameState.player2Sets}`;
+}
+
+function updatePauseButtonUI() {
+    const pauseBtn = document.getElementById('gamePauseBtn');
+    if (!pauseBtn) return;
+    if (gameState.state === 'paused') {
+        pauseBtn.textContent = '▶';
+        pauseBtn.title = '경기 재개(Resume Game)';
+        pauseBtn.disabled = false;
+        pauseBtn.classList.add('is-paused');
+    } else if (gameState.state === 'inGame') {
+        pauseBtn.textContent = 'Ⅱ';
+        pauseBtn.title = '경기 일시 정지(Pause Game)';
+        pauseBtn.disabled = false;
+        pauseBtn.classList.remove('is-paused');
+    } else {
+        pauseBtn.textContent = 'Ⅱ';
+        pauseBtn.title = '경기 준비 중';
+        pauseBtn.disabled = true;
+        pauseBtn.classList.remove('is-paused');
+    }
+}
+
+function toggleGamePause() {
+    if (gameState.state !== 'inGame' && gameState.state !== 'paused') return;
+
+    if (gameState.state === 'paused') {
+        gameState.state = 'inGame';
+        matchStartTime = Date.now();
+        startMatchTimer();
+    } else {
+        if (matchStartTime) {
+            matchElapsedBeforePause += Date.now() - matchStartTime;
+        }
+        matchStartTime = null;
+        gameState.state = 'paused';
+        stopMatchTimer();
+        updateElapsedTimeDisplay();
+    }
+    updatePauseButtonUI();
+}
+
+function triggerScoreAnimation(el) {
+    if (!el) return;
+    el.classList.remove('score-animate');
+    // force reflow to restart animation
+    void el.offsetWidth;
+    el.classList.add('score-animate');
 }
 
 function stopRecording() {
@@ -923,6 +1059,8 @@ function deleteHistoryDetail() {
 function clearHistory() {
     if (!confirm('모든 기록을 삭제하시겠습니까?')) return;
     gameState.matchHistory = [];
+gameState._lastScore1 = gameState.player1Score;
+gameState._lastScore2 = gameState.player2Score;
     saveHistoryToStorage();
     renderHistoryList();
 }
@@ -1026,6 +1164,14 @@ function startGame() {
     showScreen('scoreboard');
 
     gameState.state = 'inGame';
+    gameState._lastScore1 = gameState.player1Score;
+    gameState._lastScore2 = gameState.player2Score;
+    matchElapsedBeforePause = 0;
+    matchStartTime = Date.now();
+    startRealtimeClock();
+    startMatchTimer();
+    updatePauseButtonUI();
+    updateGameHeader();
     // 게임 시작 안내
     speakNarration('gameStart');
     // announce initial serve position
@@ -1082,17 +1228,37 @@ function showScreen(screenId) {
 
 // 점수판 업데이트
 function updateScoreboard() {
-    document.getElementById('score1').textContent = gameState.player1Score;
-    document.getElementById('score2').textContent = gameState.player2Score;
+    const score1El = document.getElementById('score1');
+    if (score1El) {
+        score1El.textContent = gameState.player1Score;
+        if (gameState._lastScore1 !== gameState.player1Score) triggerScoreAnimation(score1El);
+        gameState._lastScore1 = gameState.player1Score;
+    }
 
-    document.getElementById('player1SetsInline').textContent = gameState.player1Sets;
-    document.getElementById('player2SetsInline').textContent = gameState.player2Sets;
-    // 선수 이름 UI 반영
+    const score2El = document.getElementById('score2');
+    if (score2El) {
+        score2El.textContent = gameState.player2Score;
+        if (gameState._lastScore2 !== gameState.player2Score) triggerScoreAnimation(score2El);
+        gameState._lastScore2 = gameState.player2Score;
+    }
+
+    const set1El = document.getElementById('player1SetsInline');
+    if (set1El) set1El.textContent = gameState.player1Sets;
+    const set2El = document.getElementById('player2SetsInline');
+    if (set2El) set2El.textContent = gameState.player2Sets;
+
     const pn1 = document.querySelector('#player1Score .player-name');
-    const pn2 = document.querySelector('#player2Score .player-name');
     if (pn1) pn1.innerHTML = `${gameState.player1Name} - <span id="player1SetsInline">${gameState.player1Sets}</span>`;
+    const pn2 = document.querySelector('#player2Score .player-name');
     if (pn2) pn2.innerHTML = `${gameState.player2Name} - <span id="player2SetsInline">${gameState.player2Sets}</span>`;
+
+    const cardLabel1 = document.getElementById('team1Label');
+    if (cardLabel1) cardLabel1.textContent = gameState.player1Name;
+    const cardLabel2 = document.getElementById('team2Label');
+    if (cardLabel2) cardLabel2.textContent = gameState.player2Name;
+
     updateServeColor();
+    updateGameHeader();
 }
 
 // 점수 증가
@@ -1262,6 +1428,11 @@ function updateScore(player, delta) {
 function updateServeColor() {
     document.getElementById('score1').classList.toggle('serve', currentServer === 1);
     document.getElementById('score2').classList.toggle('serve', currentServer === 2);
+    const serveEl = document.getElementById('serveIndicator');
+    if (serveEl) {
+        const serverName = currentServer === 1 ? gameState.player1Name : gameState.player2Name;
+        serveEl.textContent = `${serverName} 서브`;
+    }
 }
 
 function showServeChangeAlert() {
@@ -1304,6 +1475,7 @@ function checkSetEnd() {
 // 세트 종료
 function endSet(winner) {
     gameState.state = 'setEnd';
+    updatePauseButtonUI();
     const neededSets = Math.ceil(gameState.totalSets / 2);
 
     if (winner === 1) {
@@ -1359,6 +1531,7 @@ function endSet(winner) {
             gameState.player1Score = 0;
             gameState.player2Score = 0;
             gameState.state = 'inGame';
+            updatePauseButtonUI();
 
             updateScoreboard();
             speakNarration('setStart', { set: gameState.currentSet });
@@ -1381,6 +1554,8 @@ function endGame() {
     document.getElementById('player2DisplayName').textContent = gameState.player2Name;
 
     speakNarration('gameEnd', { winnerText });
+    stopGameTimers(true, true);
+    updatePauseButtonUI();
 
     // also announce via narration object
     // show game end screen after a short delay
@@ -1458,6 +1633,8 @@ function speakScore(text) {
 // 게임 선택 화면으로 이동
 function showGameSelection() {
     console.log('showGameSelection called');
+    stopGameTimers(true, true);
+    updatePauseButtonUI();
     showScreen('gameSelection');
 }
 
@@ -1753,6 +1930,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // allow manual refresh (in case user plugs in camera)
     try { window.addEventListener('focus', populateCameras); } catch (e) { }
+
+    updatePauseButtonUI();
+    updateGameHeader();
+    updateElapsedTimeDisplay();
+    updateRealtimeClockDisplay();
 });
 
 // PWA 지원을 위한 서비스 워커 등록 (일시적으로 비활성화)
