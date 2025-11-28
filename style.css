@@ -1232,31 +1232,30 @@ body.android .end-btn {
 #scoreboard.scoreboard-modern {
     background: radial-gradient(circle at top, #10172a 0%, #050914 60%, #030509 100%);
     color: #f8fafc;
-    padding: 1.5rem;
-    gap: 2rem;
+    padding: 1.25rem 1.75rem;
+    gap: 1rem;
     display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    justify-content: space-between;
+    flex-direction: column;
     width: 100vw;
     height: 100vh;
     box-sizing: border-box;
 }
 
-.scoreboard-main {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    min-width: 0;
+.scoreboard-top {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr auto;
+    align-items: center;
+    width: 100%;
+    gap: 1rem;
 }
 
-.scoreboard-sidebar {
-    width: clamp(90px, 12vw, 140px);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+.scoreboard-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr) clamp(70px, 10vw, 110px);
     align-items: center;
+    gap: 1rem;
+    width: 100%;
 }
 
 #scoreboard.scoreboard-modern .scoreboard-header {
@@ -1382,15 +1381,6 @@ body.android .end-btn {
     transform: translateY(-2px);
 }
 
-.scoreboard-body {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.25rem;
-    width: 100%;
-    flex: 1 1 auto;
-}
-
 .score-card {
     flex: 1;
     border-radius: 32px;
@@ -1479,45 +1469,55 @@ body.android .end-btn {
     text-align: center;
 }
 
-.scoreboard-sidebar .control-buttons {
+.control-column {
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
+    gap: 0.6rem;
     width: 100%;
-    padding: 0.5rem 0;
+    align-self: stretch;
+    justify-content: center;
 }
 
+.control-column .control-btn,
 #scoreboard.scoreboard-modern .control-btn {
     background: rgba(15,23,42,0.85);
     border-radius: 16px;
     border: 1px solid rgba(148,163,184,0.35);
     width: 100%;
-    aspect-ratio: 1/1;
-    min-height: 52px;
     box-shadow: 0 10px 25px rgba(2,6,23,0.45);
     display: inline-flex;
     justify-content: center;
     align-items: center;
+    min-height: 56px;
 }
 
 @media (max-width: 1200px) {
-    #scoreboard.scoreboard-modern {
-        flex-direction: column;
-        padding: 1rem;
-        height: auto;
-        min-height: 100vh;
+    .scoreboard-top {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        text-align: center;
     }
-    .scoreboard-sidebar {
-        width: 100%;
-    }
-    .scoreboard-sidebar .control-buttons {
-        flex-direction: row;
+    .header-left {
         justify-content: center;
-        flex-wrap: wrap;
     }
-    #scoreboard.scoreboard-modern .control-btn {
-        width: 56px;
-        aspect-ratio: unset;
+    .scoreboard-grid {
+        grid-template-columns: 1fr;
+        grid-auto-rows: auto;
+    }
+    .score-divider {
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-around;
+    }
+    .control-column {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    .control-column .control-btn {
+        width: 60px;
+        min-height: 60px;
     }
 }
 

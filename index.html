@@ -161,56 +161,51 @@
 
     <!-- 점수판 화면 -->
     <div id="scoreboard" class="screen scoreboard-modern">
-        <div class="scoreboard-main">
-            <div class="scoreboard-header">
-                <div class="header-left">
-                    <div class="header-game-info">
-                        <span class="header-label">경기</span>
-                        <strong id="liveGameName">게임 대기</strong>
+        <div class="scoreboard-top">
+            <div class="header-left">
+                <div class="header-game-info">
+                    <span class="header-label">경기</span>
+                    <strong id="liveGameName">게임 대기</strong>
+                </div>
+                <button id="gamePauseBtn" class="pause-btn" onclick="toggleGamePause()" type="button"
+                    title="경기 일시 정지(Pause Game)">Ⅱ</button>
+                <div class="header-times">
+                    <div class="time-block">
+                        <span class="time-label">현재시간</span>
+                        <strong id="currentTimeDisplay">--:--</strong>
                     </div>
-                    <button id="gamePauseBtn" class="pause-btn" onclick="toggleGamePause()" type="button"
-                        title="경기 일시 정지(Pause Game)">Ⅱ</button>
-                    <div class="header-times">
-                        <div class="time-block">
-                            <span class="time-label">현재시간</span>
-                            <strong id="currentTimeDisplay">--:--</strong>
-                        </div>
-                        <div class="time-block">
-                            <span class="time-label">경과시간</span>
-                            <strong id="elapsedTimeDisplay">00:00</strong>
-                        </div>
+                    <div class="time-block">
+                        <span class="time-label">경과시간</span>
+                        <strong id="elapsedTimeDisplay">00:00</strong>
                     </div>
                 </div>
-                <div class="header-center">
-                    <div class="team-name" id="team1HeaderName">Player 1</div>
-                    <div class="set-score-display" id="setScoreHeader">0 : 0</div>
-                    <div class="team-name" id="team2HeaderName">Player 2</div>
-                </div>
-                <button class="menu-icon-btn" onclick="toggleGameMenu(event)" type="button" title="메뉴(Menu)">☰</button>
             </div>
-
-            <div class="scoreboard-body">
-                <div class="score-card team1 player-score" id="player1Score" role="button" tabindex="0"
-                    aria-label="Player 1 Score">
-                    <div class="team-label" id="team1Label">Player 1</div>
-                    <div class="score-display" id="score1">0</div>
-                    <div class="set-indicator">세트 승리: <span id="player1SetsInline">0</span></div>
-                </div>
-                <div class="score-divider">
-                    <div class="vs-text">VS</div>
-                    <div class="serve-indicator" id="serveIndicator">Serve</div>
-                </div>
-                <div class="score-card team2 player-score" id="player2Score" role="button" tabindex="0"
-                    aria-label="Player 2 Score">
-                    <div class="team-label" id="team2Label">Player 2</div>
-                    <div class="score-display" id="score2">0</div>
-                    <div class="set-indicator">세트 승리: <span id="player2SetsInline">0</span></div>
-                </div>
+            <div class="header-center">
+                <div class="team-name" id="team1HeaderName">Player 1</div>
+                <div class="set-score-display" id="setScoreHeader">0 : 0</div>
+                <div class="team-name" id="team2HeaderName">Player 2</div>
             </div>
+            <button class="menu-icon-btn" onclick="toggleGameMenu(event)" type="button" title="메뉴(Menu)">☰</button>
         </div>
 
-        <div class="scoreboard-sidebar">
-            <div class="control-buttons">
+        <div class="scoreboard-grid">
+            <div class="score-card team1 player-score" id="player1Score" role="button" tabindex="0"
+                aria-label="Player 1 Score">
+                <div class="team-label" id="team1Label">Player 1</div>
+                <div class="score-display" id="score1">0</div>
+                <div class="set-indicator">세트 승리: <span id="player1SetsInline">0</span></div>
+            </div>
+            <div class="score-divider">
+                <div class="vs-text">VS</div>
+                <div class="serve-indicator" id="serveIndicator">Serve</div>
+            </div>
+            <div class="score-card team2 player-score" id="player2Score" role="button" tabindex="0"
+                aria-label="Player 2 Score">
+                <div class="team-label" id="team2Label">Player 2</div>
+                <div class="score-display" id="score2">0</div>
+                <div class="set-indicator">세트 승리: <span id="player2SetsInline">0</span></div>
+            </div>
+            <div class="control-column">
                 <button class="control-btn" onclick="showGameSelection()" type="button" title="새 게임(New game)">🏠</button>
                 <button class="control-btn" onclick="resetSet()" type="button" title="세트 리셋(Set reset)">🔄</button>
                 <button class="control-btn" onclick="undoLastScore()" type="button" title="실수 수정(Score undo)">↩️</button>
