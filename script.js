@@ -38,6 +38,8 @@ let matchStartTime = null;
 let matchElapsedBeforePause = 0;
 let matchTimerInterval = null;
 let realtimeClockInterval = null;
+let landscapeLockActive = false;
+let gameMenuOutsideHandler = null;
 
 // FFmpeg initialization
 let ffmpegReady = false;
@@ -461,6 +463,65 @@ function stopGameTimers(resetDisplays = false, resetElapsedState = false) {
     if (resetElapsedState) {
         matchStartTime = null;
         matchElapsedBeforePause = 0;
+    }
+}
+
+async function lockScreenOrientationLandscape() {
+    try {
+        if (screen.orientation && screen.orientation.lock) {
+            await screen.orientation.lock('landscape');
+        } else if (screen.lockOrientation) {
+            screen.lockOrientation('landscape');
+        } else if (screen.mozLockOrientation) {
+            screen.mozLockOrientation('landscape');
+        } else if (screen.msLockOrientation) {
+            screen.msLockOrientation('landscape');
+        }
+    } catch (e) {
+        console.warn('Orientation lock failed', e);
+    }
+}
+
+function handleOrientationState() {
+    const warning = document.getElementById('orientationWarning');
+    if (!landscapeLockActive) {
+        if (warning) warning.classList.remove('active');
+        return;
+    }
+    const isPortrait = window.matchMedia('(orientation: portrait)').matches;
+    if (warning) warning.classList.toggle('active', isPortrait);
+    if (!isPortrait) {
+        lockScreenOrientationLandscape();
+    }
+}
+
+function enableLandscapeLock() {
+    if (landscapeLockActive) {
+        handleOrientationState();
+        return;
+    }
+    landscapeLockActive = true;
+    document.body.classList.add('landscape-lock');
+    lockScreenOrientationLandscape();
+    handleOrientationState();
+}
+
+function disableLandscapeLock() {
+    if (!landscapeLockActive) return;
+    landscapeLockActive = false;
+    document.body.classList.remove('landscape-lock');
+    const warning = document.getElementById('orientationWarning');
+    if (warning) warning.classList.remove('active');
+    try {
+        if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+        } else if (screen.unlockOrientation) {
+            screen.unlockOrientation();
+        } else if (screen.mozUnlockOrientation) {
+            screen.mozUnlockOrientation();
+        }
+    } catch (e) {
+        console.warn('Orientation unlock failed', e);
     }
 }
 
@@ -891,15 +952,55 @@ function closevoiceLanguage() {
     }
 }
 
-function toggleGameMenu() {
+function toggleGameMenu(event) {
     const menu = document.getElementById('gameMenu');
     if (!menu) return;
-    if (menu.style.display === 'none' || menu.style.display === '') menu.style.display = 'block';
-    else menu.style.display = 'none';
+    const triggerEl = event ? event.currentTarget : null;
+    const shouldOpen = !menu.classList.contains('active');
+    if (shouldOpen) {
+        if (triggerEl) {
+            const rect = triggerEl.getBoundingClientRect();
+            menu.style.top = `${rect.bottom + 10}px`;
+            const rightSpace = Math.max(16, window.innerWidth - rect.right);
+            menu.style.right = `${rightSpace}px`;
+        } else {
+            menu.style.top = '56px';
+            menu.style.right = '20px';
+        }
+        menu.classList.add('active');
+        if (event) event.stopPropagation();
+        if (gameMenuOutsideHandler) {
+            document.removeEventListener('click', gameMenuOutsideHandler, true);
+            gameMenuOutsideHandler = null;
+        }
+        gameMenuOutsideHandler = function (e) {
+            const clickedInside = menu.contains(e.target);
+            const clickedTrigger = triggerEl && triggerEl.contains(e.target);
+            if (!clickedInside && !clickedTrigger) {
+                closeGameMenu();
+            }
+        };
+        setTimeout(() => {
+            document.addEventListener('click', gameMenuOutsideHandler, true);
+        }, 0);
+    } else {
+        closeGameMenu();
+        if (event) event.stopPropagation();
+    }
+}
+
+function closeGameMenu() {
+    const menu = document.getElementById('gameMenu');
+    if (!menu) return;
+    menu.classList.remove('active');
+    if (gameMenuOutsideHandler) {
+        document.removeEventListener('click', gameMenuOutsideHandler, true);
+        gameMenuOutsideHandler = null;
+    }
 }
 
 function openPlayerRegistrationFromMenu() {
-    toggleGameMenu();
+    closeGameMenu();
     showScreen('gameSettings');
     setTimeout(() => {
         const el = document.getElementById('playerReg1');
@@ -1203,17 +1304,16 @@ function showScreen(screenId) {
         console.error('Screen not found:', screenId);
     }
 
-    // 모바일에서 전체화면 설정
+    // 전체화면 및 가로 고정 처리
     if (screenId === 'scoreboard' || screenId === 'gameSettings') {
         document.body.classList.add('fullscreen');
-        // 모바일에서 화면 방향 고정
-        if (targetScreen && targetScreen.orientation && targetScreen.orientation.lock) {
-            targetScreen.orientation.lock('portrait').catch(() => {
-                // 방향 잠금이 지원되지 않는 경우 무시
-            });
-        }
     } else {
         document.body.classList.remove('fullscreen');
+    }
+    if (screenId === 'scoreboard') {
+        enableLandscapeLock();
+    } else {
+        disableLandscapeLock();
     }
 
     // If user navigates to game settings, ensure match-type visibility reflects the selected game
@@ -1635,6 +1735,7 @@ function showGameSelection() {
     console.log('showGameSelection called');
     stopGameTimers(true, true);
     updatePauseButtonUI();
+    closeGameMenu();
     showScreen('gameSelection');
 }
 
@@ -1930,6 +2031,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // allow manual refresh (in case user plugs in camera)
     try { window.addEventListener('focus', populateCameras); } catch (e) { }
+
+    window.addEventListener('orientationchange', handleOrientationState);
+    window.addEventListener('resize', handleOrientationState);
 
     updatePauseButtonUI();
     updateGameHeader();

@@ -13,28 +13,32 @@
     <meta name="apple-mobile-web-app-title" content="SportScore">
     <meta name="format-detection" content="telephone=no">
     <meta name="apple-touch-fullscreen" content="yes">
-    <meta name="apple-mobile-web-app-orientations" content="portrait">
+    <meta name="apple-mobile-web-app-orientations" content="landscape">
 </head>
 
 <body>
+    <div id="gameMenu" class="global-menu">
+        <button class="modal-action" style="display:block;width:100%;margin-bottom:6px;"
+            onclick="openSavedNamesManager();closeGameMenu()">선수 관리(Players)</button>
+        <button class="modal-action" style="display:block;width:100%;margin-bottom:6px;"
+            onclick="showHistory();closeGameMenu()">기록 보기(History)</button>
+        <button class="modal-action" style="display:block;width:100%;margin-bottom:6px;"
+            onclick="voiceLanguage();closeGameMenu()">언어설정(Language)</button>
+        <button class="modal-action" style="display:block;width:100%;"
+            onclick="showAbout();closeGameMenu()">About</button>
+    </div>
+
+    <div id="orientationWarning" class="orientation-warning">
+        가로 모드를 유지해주세요.<br />기기를 회전해도 화면이 자동으로 회전하지 않습니다.
+    </div>
+
     <!-- 게임 선택 화면 -->
     <div id="gameSelection" class="screen">
         <div style="display:flex;align-items:center;gap:0.5rem;width:100%;justify-content:space-between;">
             <h1 style="margin:0;">Sport Score Board</h1>
             <button id="gameMenuBtn" class="control-btn"
-                style="width:auto;height:auto;padding:8px 10px;border-radius:10px;" onclick="toggleGameMenu()"
+                style="width:auto;height:auto;padding:8px 10px;border-radius:10px;" onclick="toggleGameMenu(event)"
                 title="메뉴(Menu)">☰</button>
-        </div>
-        <div id="gameMenu"
-            style="display:none;position:absolute;top:56px;right:20px;background:#fff;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.12);padding:8px;z-index:1200;">
-            <button class="modal-action" style="display:block;width:100%;margin-bottom:6px;"
-                onclick="openSavedNamesManager();toggleGameMenu()">선수 관리(Players)</button>
-            <button class="modal-action" style="display:block;width:100%;margin-bottom:6px;"
-                onclick="showHistory();toggleGameMenu()">기록 보기(History)</button>
-            <button class="modal-action" style="display:block;width:100%;margin-bottom:6px;"
-                onclick="voiceLanguage();toggleGameMenu()">언어설정(Language)</button>
-            <button class="modal-action" style="display:block;width:100%;"
-                onclick="showAbout();toggleGameMenu()">About</button>
         </div>
         <div class="game-buttons">
             <button class="game-btn" onclick="selectGame('badminton')" type="button">
@@ -181,7 +185,7 @@
                 <div class="set-score-display" id="setScoreHeader">0 : 0</div>
                 <div class="team-name" id="team2HeaderName">Player 2</div>
             </div>
-            <button class="menu-icon-btn" onclick="showGameSelection()" type="button" title="메인 메뉴(Main menu)">☰</button>
+            <button class="menu-icon-btn" onclick="toggleGameMenu(event)" type="button" title="메뉴(Menu)">☰</button>
         </div>
 
         <div class="scoreboard-body">
