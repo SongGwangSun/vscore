@@ -1232,8 +1232,31 @@ body.android .end-btn {
 #scoreboard.scoreboard-modern {
     background: radial-gradient(circle at top, #10172a 0%, #050914 60%, #030509 100%);
     color: #f8fafc;
-    padding: 1.5rem 1rem;
-    gap: 1rem;
+    padding: 1.5rem;
+    gap: 2rem;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-between;
+    width: 100vw;
+    height: 100vh;
+    box-sizing: border-box;
+}
+
+.scoreboard-main {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+}
+
+.scoreboard-sidebar {
+    width: clamp(90px, 12vw, 140px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 #scoreboard.scoreboard-modern .scoreboard-header {
@@ -1361,11 +1384,11 @@ body.android .end-btn {
 
 .scoreboard-body {
     display: flex;
-    align-items: stretch;
-    justify-content: center;
-    gap: 1rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
     width: 100%;
-    flex: 1;
+    flex: 1 1 auto;
 }
 
 .score-card {
@@ -1456,23 +1479,46 @@ body.android .end-btn {
     text-align: center;
 }
 
-#scoreboard.scoreboard-modern .control-buttons {
-    position: relative;
+.scoreboard-sidebar .control-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
     width: 100%;
-    background: transparent;
-    border-top: none;
-    box-shadow: none;
     padding: 0.5rem 0;
-    margin-top: 0.5rem;
 }
 
 #scoreboard.scoreboard-modern .control-btn {
     background: rgba(15,23,42,0.85);
     border-radius: 16px;
     border: 1px solid rgba(148,163,184,0.35);
-    width: 52px;
-    height: 52px;
+    width: 100%;
+    aspect-ratio: 1/1;
+    min-height: 52px;
     box-shadow: 0 10px 25px rgba(2,6,23,0.45);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@media (max-width: 1200px) {
+    #scoreboard.scoreboard-modern {
+        flex-direction: column;
+        padding: 1rem;
+        height: auto;
+        min-height: 100vh;
+    }
+    .scoreboard-sidebar {
+        width: 100%;
+    }
+    .scoreboard-sidebar .control-buttons {
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    #scoreboard.scoreboard-modern .control-btn {
+        width: 56px;
+        aspect-ratio: unset;
+    }
 }
 
 @media (max-width: 900px) {
@@ -1487,6 +1533,9 @@ body.android .end-btn {
     .score-card {
         width: 100%;
     }
+}
+
+@media (max-width: 900px) {
     .header-left {
         flex-direction: column;
         align-items: flex-start;
