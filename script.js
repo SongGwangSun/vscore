@@ -186,10 +186,23 @@ function startRecording() {
             catch (e) {
                 try { mediaRecorder = new MediaRecorder(stream); } catch (err) { console.warn('MediaRecorder unsupported', err); return null; }
             }
-            mediaRecorder.ondataavailable = function (e) { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
+            mediaRecorder.ondataavailable = function (e) { 
+                if (e.data && e.data.size > 0) {
+                    recordedChunks.push(e.data);
+                    console.log('Data chunk received, total chunks:', recordedChunks.length, 'size:', e.data.size);
+                }
+            };
             mediaRecorder.onpause = function () {
                 recordingState = 'paused';
                 updateRecordingButton();
+                // pause 시점에 현재까지의 데이터를 요청
+                try {
+                    if (typeof mediaRecorder.requestData === 'function') {
+                        mediaRecorder.requestData();
+                    }
+                } catch (e) {
+                    console.warn('requestData on pause failed', e);
+                }
             };
             mediaRecorder.onresume = function () {
                 recordingState = 'recording';
@@ -240,7 +253,8 @@ function startRecording() {
                     showSaveConfirm(filename);
                 } catch (e) { console.warn('download video failed', e); }
             };
-            mediaRecorder.start();
+            // timeslice를 500ms로 설정하여 더 자주 데이터를 받도록 함
+            mediaRecorder.start(500);
             recordingState = 'recording';
             updateRecordingButton();
             return true;
@@ -252,11 +266,15 @@ function pauseRecording() {
     if (!mediaRecorder || recordingState !== 'recording') return;
     try {
         if (mediaRecorder.state === 'recording') {
-            mediaRecorder.pause();
-            // 현재까지 녹화된 영상을 미리보기용으로 저장
-            if (recordedChunks.length > 0) {
-                previewVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+            // pause() 전에 현재까지의 데이터를 요청하여 받아옴
+            try {
+                if (typeof mediaRecorder.requestData === 'function') {
+                    mediaRecorder.requestData();
+                }
+            } catch (e) {
+                console.warn('requestData failed (may not be supported)', e);
             }
+            mediaRecorder.pause();
         }
     } catch (e) {
         console.warn('pauseRecording failed', e);
@@ -277,7 +295,10 @@ function resumeRecording() {
 function toggleRecordingPause() {
     if (recordingState === 'recording') {
         pauseRecording();
-        showRecordingPreview();
+        // ondataavailable 이벤트가 처리될 시간을 주기 위해 잠시 대기 후 미리보기 표시
+        setTimeout(() => {
+            showRecordingPreview();
+        }, 300);
     } else if (recordingState === 'paused') {
         resumeRecording();
         closeRecordingPreview();
@@ -302,23 +323,49 @@ function updateRecordingButton() {
 }
 
 function showRecordingPreview() {
-    if (!previewVideoBlob) {
-        // recordedChunks에서 직접 생성
-        if (recordedChunks.length === 0) {
-            alert('아직 녹화된 영상이 없습니다.');
-            return;
-        }
-        previewVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
-    }
-    
     const modal = document.getElementById('recordingPreviewModal');
     const videoEl = document.getElementById('previewVideo');
     if (!modal || !videoEl) return;
     
+    // recordedChunks가 비어있으면 requestData()를 호출하고 대기
+    if (recordedChunks.length === 0) {
+        if (mediaRecorder && (mediaRecorder.state === 'paused' || mediaRecorder.state === 'recording')) {
+            try {
+                if (typeof mediaRecorder.requestData === 'function') {
+                    mediaRecorder.requestData();
+                }
+            } catch (e) {
+                console.warn('requestData in preview failed', e);
+            }
+            // ondataavailable 이벤트가 처리될 시간을 주기 위해 잠시 대기
+            setTimeout(() => {
+                if (recordedChunks.length === 0) {
+                    alert('아직 녹화된 영상이 없습니다. 잠시 후 다시 시도해주세요.');
+                    return;
+                }
+                // 데이터가 있으면 Blob 생성 및 표시
+                previewVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(previewVideoBlob);
+                videoEl.src = url;
+                videoEl.playbackRate = 1.0;
+                const speedSelect = document.getElementById('playbackSpeed');
+                if (speedSelect) speedSelect.value = '1.0';
+                modal.classList.add('active');
+            }, 400);
+            return;
+        } else {
+            alert('아직 녹화된 영상이 없습니다.');
+            return;
+        }
+    }
+    
+    // recordedChunks가 있으면 Blob 생성 (항상 최신 데이터 사용)
+    previewVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
     const url = URL.createObjectURL(previewVideoBlob);
     videoEl.src = url;
     videoEl.playbackRate = 1.0; // 기본 재생 속도
-    document.getElementById('playbackSpeed').value = '1.0';
+    const speedSelect = document.getElementById('playbackSpeed');
+    if (speedSelect) speedSelect.value = '1.0';
     
     modal.classList.add('active');
 }
